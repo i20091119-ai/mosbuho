@@ -6,11 +6,6 @@
 <title>경남수학문화관 · 알고리즘으로 잠그고 수학으로 푸는 비밀 팔찌</title>
 <meta name="description" content="2026 경남직업교육박람회 · 경남수학문화관 모스부호 phygital 체험 부스 앱">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-
-<!-- ── 완전 오프라인: 외부 요청 0. UNO Q 로컬 구동 전제 ──
-     폰트는 로컬 시스템 폰트 스택 사용(설치돼 있으면 Pretendard/Noto, 아니면 시스템 sans).
-     폰트를 박람회 정체성에 정확히 맞추려면 assets/fonts/ 에 woff2 를 넣고
-     css/style.css 의 @font-face 주석을 활성화하세요. -->
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -19,49 +14,72 @@
   <!-- ════════ 헤더 ════════ -->
   <header class="app-header">
     <div class="brand-row">
-      <!-- 원본 PNG 가 있으면 자동 사용, 없으면 SVG 재현본으로 폴백 -->
-      <img class="brand-logo" src="assets/gnmc_logo.png" alt="경남수학문화관 GNMC"
-           onerror="this.onerror=null; this.src='assets/gnmc_logo.svg';">
+      <!-- 원본 PNG(assets/logo/gnmc_logo.png) 가 있으면 자동 사용, 없으면 SVG 재현본 -->
+      <img class="brand-logo" src="assets/logo/gnmc_logo.png" alt="경남수학문화관 GNMC"
+           onerror="this.onerror=null; this.src='assets/logo/gnmc_logo.svg';">
       <div class="brand-meta">
         <span class="t">알고리즘으로 잠그고 수학으로 푸는 비밀 팔찌</span>
-        <span class="s">경남수학문화관 · 2026 경남직업교육박람회 미래기술 체험존</span>
+        <span class="s">경남 스페이스센터 · 우주통신사 미션</span>
       </div>
     </div>
-    <div class="header-cycle">체험 사이클 <b>약 15분</b> · 점 <b style="color:var(--c-red)">●</b> 빨강비즈 · 대시 <b style="color:var(--c-blue)">▬</b> 파랑비즈</div>
+    <div class="header-cycle">점 <b style="color:var(--c-red)">●</b> 빨강·짧은 비즈 · 대시 <b style="color:var(--c-blue)">▬</b> 파랑·긴 비즈</div>
   </header>
 
-  <!-- ════════ 단계 네비게이션 (인지 사다리) ════════ -->
+  <!-- ════════ 단계 네비게이션 (가이드 흐름; 시차 운영 위해 자유 이동) ════════ -->
   <nav class="nav" id="nav">
-    <button class="nav-btn active" data-screen="home"><span class="step-no">＊</span>홈</button>
-    <button class="nav-btn" data-screen="telegraph"><span class="step-no">2</span>전신키 <span class="ladder">· 추상</span></button>
-    <button class="nav-btn" data-screen="camera"><span class="step-no">3</span>카메라 인식 <span class="ladder">· 반실물</span></button>
-    <button class="nav-btn" data-screen="arduino"><span class="step-no">5</span>신호 확인 <span class="ladder">· 실물</span></button>
-    <button class="nav-btn" data-screen="stats"><span class="step-no">∑</span>데이터 통계</button>
+    <button class="nav-btn active" data-screen="grade"><span class="step-no">1</span>학년</button>
+    <button class="nav-btn" data-screen="story"><span class="step-no">2</span>이야기</button>
+    <button class="nav-btn" data-screen="mission"><span class="step-no">3</span>미션</button>
+    <button class="nav-btn" data-screen="telegraph"><span class="step-no">4</span>전신키 <span class="ladder">· 추상</span></button>
+    <button class="nav-btn" data-screen="camera"><span class="step-no">5</span>카메라 <span class="ladder">· 반실물</span></button>
+    <button class="nav-btn" data-screen="bracelet"><span class="step-no">6</span>팔찌 <span class="ladder">· 실물</span></button>
+    <button class="nav-btn" data-screen="arduino"><span class="step-no">7</span>신호확인</button>
+    <button class="nav-btn" data-screen="finish"><span class="step-no">8</span>마무리</button>
+    <button class="nav-btn nav-aux" data-screen="stats"><span class="step-no">∑</span>통계</button>
+    <button class="btn sm" id="navReset" style="margin-left:auto">↺ 처음으로</button>
   </nav>
 
   <!-- ════════ 화면들 ════════ -->
   <main class="screens">
 
-    <!-- ── 홈 ── -->
-    <section class="screen active" id="screen-home">
+    <!-- ── ① 학년 선택 ── -->
+    <section class="screen active" id="screen-grade">
       <div class="home-hero">
         <div class="home-motif" id="homeMotif" aria-hidden="true"></div>
-        <!-- (선택) 히어로 일러스트: assets/img/welcome.svg 를 넣으면 자동 표시, 없으면 사라짐 -->
         <img class="home-welcome" src="assets/img/welcome.svg" alt="" onerror="this.remove()">
-        <h1>점과 대시로 만드는 비밀 메시지</h1>
-        <p class="lead">손으로 신호를 두드리고(추상) → 비즈를 카메라로 읽고(반실물) → 진짜 팔찌로 만들어(실물)<br>아두이노 LED·부저로 내 메시지를 확인해요.</p>
+        <h1>경남 스페이스센터 · 우주통신사 미션</h1>
+        <p class="lead">우주에서 알 수 없는 빛 신호가 들어왔어요. 신호를 풀고(복호화), 답신을 보내(암호화) 미션을 완수하세요.<br>먼저 누가 도전하는지 골라주세요.</p>
       </div>
-      <div class="home-cards" id="homeCards"></div>
-      <div class="card" style="margin-top:20px">
-        <div class="card-title">비즈 색 규칙</div>
+      <div class="grade-cards" id="gradeCards"></div>
+      <div class="card" style="margin-top:18px">
+        <div class="card-title">준비물 안내</div>
         <div class="legend">
           <span><span class="shapes"><span class="m-dot"></span></span> &nbsp;<span class="dot-k">짧은 빨강 비즈 = 점(·)</span></span>
           <span><span class="shapes"><span class="m-dash"></span></span> &nbsp;<span class="dash-k">긴 파랑 비즈 = 대시(—)</span></span>
+          <span style="color:var(--muted)">모스부호표는 테이블의 <b>실물 코팅표</b>를 보세요.</span>
         </div>
       </div>
     </section>
 
-    <!-- ── ② 전신키 ── -->
+    <!-- ── ② 이야기 (그림책) ── -->
+    <section class="screen" id="screen-story">
+      <div class="story-stage">
+        <div class="story-image" id="storyImage"></div>
+        <div class="story-text" id="storyText"></div>
+        <div class="story-nav">
+          <button class="btn" id="storyPrev">← 이전</button>
+          <div class="story-dots" id="storyDots"></div>
+          <button class="btn primary" id="storyNext">다음 →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ③ 미션 (해독 + 응답) ── -->
+    <section class="screen" id="screen-mission">
+      <div class="mission-wrap" id="missionWrap"></div>
+    </section>
+
+    <!-- ── ④ 전신키 ── -->
     <section class="screen" id="screen-telegraph">
       <div class="tg-grid">
         <div>
@@ -74,39 +92,19 @@
               <button class="mode-tab" data-mode="sym">기호</button>
             </div>
           </div>
-
           <div class="card" style="margin-top:16px">
             <div class="card-title">전신키 — 짧게/길게 눌러 점·대시 만들기</div>
-            <div class="elem-disp" id="tgElems"><span class="placeholder">아래 키를 눌러 시작하세요!</span></div>
-
-            <div class="timing-wrap">
-              <div class="timing-track">
-                <div class="timing-mark" id="tgMark"></div>
-                <div class="timing-mark-lbl" id="tgMarkLbl">점 | 대시</div>
-                <div class="timing-fill dot" id="tgFill"></div>
-              </div>
-              <div class="timing-labels">
-                <span>짧게 = <span class="dot-k" style="color:var(--dot)">●점</span></span>
-                <span class="mono" id="tgCur"></span>
-                <span>길게 = <span class="dash-k" style="color:var(--dash)">▬대시</span></span>
-              </div>
-            </div>
-
-            <div class="key-btn off" id="tgKey">● 길게 누르면 대시, 짧게 누르면 점 ●</div>
-            <div class="cur-morse mono" id="tgCurMorse"></div>
+            <div id="tgKeyHost"></div>
           </div>
-
           <div class="card" style="margin-top:16px">
             <div class="card-title">해독된 메시지 <span style="display:flex;gap:8px"><button class="btn sm ok" id="tgSend"><img class="ic" src="assets/icons/play.svg" alt="" onerror="this.style.display='none'">신호로 보내기</button><button class="btn sm" id="tgClear">지우기</button></span></div>
             <div class="decoded" id="tgDecoded"><span class="ph">여기에 해독 결과가 나타나요</span></div>
           </div>
-
           <div class="card" style="margin-top:16px">
             <div class="card-title">도전! 이 단어를 보내보세요 <button class="btn sm" id="tgChBtn">시작</button></div>
             <div id="tgChArea" style="text-align:center;color:var(--muted);font-size:14px;padding:6px">시작을 누르면 목표 단어가 나와요</div>
           </div>
         </div>
-
         <div>
           <div class="card">
             <div class="card-title">
@@ -124,7 +122,7 @@
       </div>
     </section>
 
-    <!-- ── ③ 카메라 색 인식 ── -->
+    <!-- ── ⑤ 카메라 색 인식 ── -->
     <section class="screen" id="screen-camera">
       <div class="cam-grid">
         <div>
@@ -145,11 +143,10 @@
               <button class="btn purple" id="camCalibRed" disabled><img class="ic ic-color" src="assets/icons/bead-red.svg" alt="" onerror="this.style.display='none'">빨강 보정</button>
               <button class="btn purple" id="camCalibBlue" disabled><img class="ic ic-color" src="assets/icons/bead-blue.svg" alt="" onerror="this.style.display='none'">파랑 보정</button>
               <button class="btn" id="camReset" disabled>인식 초기화</button>
-              <button class="btn ok" id="camConfirm" disabled>이 배열로 확정 → 신호확인</button>
+              <button class="btn ok" id="camConfirm" disabled>이 배열로 확정 → 팔찌</button>
             </div>
           </div>
         </div>
-
         <div>
           <div class="card">
             <div class="card-title">실시간 해석</div>
@@ -159,6 +156,10 @@
             <div class="read-out mono" id="camMorse"></div>
             <div style="font-size:11px;color:var(--muted);font-weight:700;margin:12px 0 4px">글자</div>
             <div class="read-text" id="camText"></div>
+          </div>
+          <div class="card" style="margin-top:16px">
+            <div class="card-title">읽는 과정 (알고리즘)</div>
+            <div class="algo-steps" id="camAlgo"><span style="color:var(--muted);font-size:13px">비즈를 인식하면 한 단계씩 보여줘요</span></div>
           </div>
           <div class="card" style="margin-top:16px">
             <div class="card-title">조명 보정 상태</div>
@@ -174,7 +175,20 @@
       </div>
     </section>
 
-    <!-- ── ⑤ 아두이노 신호 확인 ── -->
+    <!-- ── ⑥ 팔찌 제작 (오프라인 안내) ── -->
+    <section class="screen" id="screen-bracelet">
+      <div class="card">
+        <div class="card-title">팔찌 만들기 — 화면 배열대로 비즈를 끈에 꿰어요</div>
+        <div id="braceletView">
+          <p style="color:var(--muted)">아직 확정한 배열이 없어요. ④전신키나 ⑤카메라에서 메시지를 확정하면 여기에 배열이 나타나요.</p>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+          <button class="btn primary" id="braceletNext">다 만들었어요 · 신호 확인 →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ⑦ 아두이노 신호 확인 ── -->
     <section class="screen" id="screen-arduino">
       <div class="ard-grid">
         <div>
@@ -194,7 +208,7 @@
             </div>
           </div>
           <div class="card" style="margin-top:16px">
-            <div class="card-title">메시지 직접 입력 (또는 ②③에서 자동 전달)</div>
+            <div class="card-title">메시지 직접 입력 (또는 ④⑤에서 자동 전달)</div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
               <input id="ardInput" placeholder="예: SOS" maxlength="24"
                      style="flex:1;min-width:160px;padding:12px 14px;border:2px solid var(--line);border-radius:var(--r-sm);font-size:18px;font-weight:700;font-family:var(--font-mono)">
@@ -207,10 +221,11 @@
             </div>
             <div class="cur-morse mono" id="ardMorse" style="font-size:22px;letter-spacing:6px;margin-top:14px"></div>
           </div>
+          <div style="margin-top:16px"><button class="btn purple" id="ardNext">미션 마무리 →</button></div>
         </div>
         <div>
           <div class="guide">
-            <div style="font-weight:800;color:var(--brand-deep);margin-bottom:6px">⑤ 아두이노 UNO Q 연동</div>
+            <div style="font-weight:800;color:var(--brand-deep);margin-bottom:6px">아두이노 UNO Q 신호</div>
             <div><b>점(·)</b> = LED 짧게 + 부저 <span class="dot-k">짧은 삑</span></div>
             <div><b>대시(—)</b> = LED 길게 + 부저 <span class="dash-k">긴 삐—</span></div>
             <div style="margin-top:8px">표준 모스 타이밍 <b>점:대시:간격 = 1:3:1</b>, 글자 사이 3, 단어 사이 7.</div>
@@ -227,7 +242,12 @@
       </div>
     </section>
 
-    <!-- ── 데이터 통계 ── -->
+    <!-- ── ⑧ 마무리 · 개념 정리 ── -->
+    <section class="screen" id="screen-finish">
+      <div class="finish-wrap" id="finishWrap"></div>
+    </section>
+
+    <!-- ── 데이터 통계 (보조) ── -->
     <section class="screen" id="screen-stats">
       <div class="stat-cards" id="statCards"></div>
       <div class="card" style="margin-top:16px">
@@ -247,12 +267,13 @@
   </main>
 </div>
 
-<!-- ── 전부 로컬·오프라인 동작 (외부 의존성 없음) ──
-     통계 차트는 외부 라이브러리 없이 순수 HTML 막대그래프로 렌더링. -->
-
+<!-- ── 전부 로컬·오프라인 동작 (외부 의존성 없음) ── -->
 <script src="js/morse-engine.js"></script>
+<script src="data/stories.js"></script>
 <script src="js/audio.js"></script>
+<script src="js/morse-key.js"></script>
 <script src="js/stats.js"></script>
+<script src="js/story.js"></script>
 <script src="js/telegraph.js"></script>
 <script src="js/camera.js"></script>
 <script src="js/arduino.js"></script>

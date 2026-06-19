@@ -210,6 +210,24 @@
     $('camMorse').textContent = M.morseToGlyphs(res.morse.replace(/ /g, '  '));
     $('camText').textContent = res.text || '';
     $('camConfirm').disabled = !res.text;
+    renderAlgo(res);
+  }
+
+  // 인식 과정을 한 단계씩 가시화 (복호화가 절차=알고리즘임을 체득)
+  function renderAlgo(res) {
+    const el = $('camAlgo'); if (!el) return;
+    if (!res.beads.length) { el.innerHTML = '<span style="color:var(--muted);font-size:13px">비즈를 인식하면 한 단계씩 보여줘요</span>'; return; }
+    let h = '';
+    res.beads.forEach((b, i) => {
+      const red = b.color === 1;
+      h += `<div class="algo-step">
+        <span class="algo-n">${i + 1}</span>
+        <span>${i + 1}번째 비즈 읽는 중: <b style="color:${red ? 'var(--dot)' : 'var(--dash)'}">${red ? '빨강' : '파랑'}</b>
+        → <b>${red ? '점(·)' : '대시(—)'}</b></span></div>`;
+    });
+    h += `<div class="algo-step done"><span class="algo-n">✓</span>
+      <span>좌→우로 모두 읽음 → 모스 <b class="mono">${M.morseToGlyphs(res.morse)}</b> → 글자 <b>${res.text || '?'}</b></span></div>`;
+    el.innerHTML = h;
   }
 
   // ── 조명 보정 ──────────────────────────────────────────────────────────

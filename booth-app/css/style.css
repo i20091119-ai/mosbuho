@@ -352,3 +352,69 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
 @media (prefers-reduced-motion: reduce) {
   .screen, .home-card { animation: none; transition: none; }
 }
+
+/* ════════════════ 학년 선택 ════════════════ */
+.nav-btn.nav-aux { opacity: .8; }
+.grade-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-top: 22px; }
+.grade-card { background: var(--card); border: 2px solid var(--line); border-radius: var(--r-lg); padding: 26px 22px; cursor: pointer; text-align: center; transition: all .15s; box-shadow: var(--shadow); }
+.grade-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--gc); }
+.grade-badge { width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--font-mono); font-weight: 800; font-size: 24px; }
+.grade-card h3 { font-size: 21px; font-weight: 800; }
+.grade-card p { font-size: 14px; color: var(--muted); margin-top: 6px; }
+
+/* ════════════════ 그림책 ════════════════ */
+.story-stage { max-width: 920px; margin: 0 auto; }
+.story-image, .story-img, .img-ph { width: 100%; aspect-ratio: 16/9; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-lg); background: #1b2330; }
+.story-img { object-fit: cover; display: block; }
+.img-ph { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #c8d0dc; background: repeating-linear-gradient(45deg, #222c3a, #222c3a 14px, #263041 14px, #263041 28px); font-weight: 700; gap: 4px; text-align: center; }
+.img-ph small { color: #8893a4; font-family: var(--font-mono); }
+.story-text { font-size: clamp(17px, 2.2vw, 22px); line-height: 1.85; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 22px 26px; margin-top: 16px; box-shadow: var(--shadow); white-space: normal; }
+.story-nav { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 16px; }
+.story-dots { display: flex; gap: 8px; }
+.sdot { width: 11px; height: 11px; border-radius: 50%; background: var(--line); }
+.sdot.on { background: var(--brand); }
+
+/* ════════════════ 미션 ════════════════ */
+.mission-wrap { max-width: 860px; margin: 0 auto; }
+.mission-card + .mission-card { margin-top: 16px; }
+.mission-prompt { font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 14px; }
+.signal-stage { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; justify-content: center; padding: 12px; }
+.mission-led { width: 88px; height: 88px; border-radius: 50%; background: radial-gradient(circle at 38% 32%, #4a4f57, #20242c); box-shadow: inset 0 4px 10px rgba(0,0,0,.4); transition: all .04s; }
+.mission-led.on { background: radial-gradient(circle at 38% 32%, #fff6d8, var(--c-orange)); box-shadow: 0 0 44px 12px rgba(240,120,24,.7), inset 0 2px 6px rgba(255,255,255,.5); }
+.signal-shapes { display: flex; gap: 14px; align-items: center; justify-content: center; flex-wrap: wrap; padding: 14px; background: var(--paper); border-radius: var(--r-md); margin-bottom: 16px; min-height: 44px; }
+.sig-letter { padding: 6px 10px; border-radius: 8px; background: #fff; border: 1px solid var(--line); }
+.sig-gap { width: 18px; }
+.opt-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.opt-btn { flex: 1; min-width: 90px; padding: 22px; font-size: 32px; font-weight: 800; font-family: var(--font-mono); border: 3px solid var(--line); border-radius: var(--r-md); background: var(--card); cursor: pointer; transition: all .12s; }
+.opt-btn:hover { border-color: var(--brand); color: var(--brand-deep); transform: translateY(-2px); }
+.decode-typein { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.mission-feedback { margin-top: 14px; font-size: 16px; font-weight: 700; min-height: 24px; }
+.mission-feedback.ok { color: var(--ok); }
+.mission-feedback.bad { color: var(--c-red); }
+.reply-target { font-size: 16px; margin-bottom: 12px; padding: 10px 14px; background: var(--paper); border-radius: var(--r-sm); }
+.reply-decoded { margin-top: 12px; font-size: 18px; }
+.reply-decoded b { font-family: var(--font-mono); color: var(--brand-deep); }
+
+/* ════════════════ 팔찌 ════════════════ */
+.bracelet-msg { font-size: 18px; margin-bottom: 14px; }
+.bracelet-string { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 22px; background: var(--paper); border-radius: var(--r-md); border: 2px dashed var(--line); }
+.bead-big { display: inline-block; }
+.bead-big.red { width: 26px; height: 26px; border-radius: 50%; background: var(--dot); }
+.bead-big.blue { width: 60px; height: 26px; border-radius: 13px; background: var(--dash); }
+.bead-sep { width: 16px; }
+.bead-sep.wide { width: 34px; }
+
+/* ════════════════ 마무리 ════════════════ */
+.finish-wrap { max-width: 760px; margin: 0 auto; }
+.finish-card { text-align: center; }
+.finish-emblem { font-size: 56px; }
+.finish-card h2 { font-size: 26px; font-weight: 800; margin: 8px 0 16px; }
+.concept-box { font-size: 18px; line-height: 1.8; color: var(--ink); background: var(--paper); border-radius: var(--r-md); padding: 20px 24px; }
+.concept-terms { display: flex; flex-direction: column; gap: 6px; margin: 16px 0; font-size: 14px; color: var(--ink-soft); }
+.finish-gift { font-size: 16px; color: var(--brand-deep); font-weight: 700; margin: 16px 0; }
+
+/* ════════════════ 카메라 알고리즘 가시화 ════════════════ */
+.algo-steps { display: flex; flex-direction: column; gap: 6px; }
+.algo-step { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 7px 10px; background: var(--paper); border-radius: var(--r-sm); animation: fade .2s ease; }
+.algo-step.done { background: #eef7ec; font-weight: 700; }
+.algo-n { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 12px; font-weight: 800; font-family: var(--font-mono); flex-shrink: 0; }

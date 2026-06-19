@@ -11,22 +11,22 @@
 
 | # | 항목 | 개수 | 폴더 | 상태 |
 |---|---|---|---|---|
-| 1 | 로고 | 1 | `assets/` | ⬜ 직접 필요(없으면 재현 SVG 사용) |
+| 1 | 로고 | 1 | `assets/logo/` | ⬜ 직접 필요(없으면 재현 SVG 사용) |
 | 2 | 폰트 | 4 | `assets/fonts/` | ✅ **자동 포함됨** |
-| 3 | 단계 일러스트 | 5 | `assets/img/` | ⬜ 직접 필요(선택) |
+| 3 | 그림책 삽화 | 12(+ref) | `assets/story/{k,e,m}/` | ⬜ **직접 생성**(Gemini, 없으면 플레이스홀더) |
 | 4 | 아이콘 | 12 | `assets/icons/` | ✅ **자동 포함됨** |
-| 5 | 배경 사진 | 1 | `assets/img/` | ⬜ 직접 필요(선택·미배선) |
+| 5 | 히어로/배경(선택) | 1~2 | `assets/img/` | ⬜ 선택 |
 
 > ✅ 폰트·아이콘은 `scripts/fetch-assets.sh` 로 **이미 받아서 커밋**했고 `@font-face` 도 활성화했습니다.
 > 파비콘(`assets/favicon.svg`)도 제작 완료. → **남은 건 로고(1)·일러스트(3)·배경(5)뿐**이며 모두 선택/대체 가능합니다.
 
 ---
 
-## 1. 로고  →  `assets/`
+## 1. 로고  →  `assets/logo/`
 
 - [ ] **`gnmc_logo.png`** — 경남수학문화관 공식 로고 (배경 투명 PNG 권장)
-  - 위치: `assets/gnmc_logo.png`
-  - 동작: 넣으면 헤더가 **자동으로 이 PNG 사용**. 없으면 제가 만든 `gnmc_logo.svg` 재현본이 표시됨.
+  - 위치: `assets/logo/gnmc_logo.png`
+  - 동작: 넣으면 헤더가 **자동으로 이 PNG 사용**. 없으면 재현본 `assets/logo/gnmc_logo.svg`가 표시됨.
   - 출처: 기관 보유 원본 파일(가장 정확). 라이선스: 기관 자산.
 
 ---
@@ -49,17 +49,24 @@
 
 ---
 
-## 3. 단계 일러스트  →  `assets/img/`  (추천: unDraw, **CC0 · 표기 불필요**)
+## 3. 그림책 삽화  →  `assets/story/{k,e,m}/`  (사용자가 Gemini로 직접 생성)
 
-undraw.co 에서 색을 `#F07818`(브랜드 주황)로 지정 후 **SVG 다운로드** → 아래 이름으로 저장.
+스토리 화면(②)에 표시. 없으면 “그림 준비 중 + 파일명” 플레이스홀더로 폴백(레이아웃 유지).
+문서 2(이미지 프롬프트)로 생성 → 아래 파일명 그대로 저장. 장면 순서 = 도입→신호→응답성공→해피엔딩.
 
-- [ ] **`welcome.svg`** — 홈 상단 큰 그림 (검색어: `connection`, `code typing`)
-- [ ] **`step-telegraph.svg`** — 홈 ② 카드 (검색어: `click here`, `buttons`)
-- [ ] **`step-camera.svg`** — 홈 ③ 카드 (검색어: `camera`, `scan`)
-- [ ] **`step-arduino.svg`** — 홈 ⑤ 카드 (검색어: `circuit`, `maker`)
-- [ ] **`step-stats.svg`** — 홈 통계 카드 (검색어: `data`, `charts`)
-  - 대체 소스(CC0): openpeeps.com, manypixels.co/gallery
-  - 동작: 있으면 카드/히어로에 표시, 없으면 자동으로 사라짐(레이아웃 안 깨짐).
+**유아·초등저 (삐삐) → `assets/story/k/`**
+- [ ] `k_01_lost.png` · [ ] `k_02_signal.png` · [ ] `k_03_reply.png` · [ ] `k_04_reunion.png` (+ 참고용 `k_ref_ppippi.png`)
+
+**초등고 (달 기지) → `assets/story/e/`**
+- [ ] `e_01_distress.png` · [ ] `e_02_signal.png` · [ ] `e_03_reply.png` · [ ] `e_04_resolved.png` (+ `e_ref_base.png`)
+
+**중·고 (화성 아라호) → `assets/story/m/`**
+- [ ] `m_01_storm.png` · [ ] `m_02_signal.png` · [ ] `m_03_reply.png` · [ ] `m_04_rescue.png` (+ `m_ref_base.png`)
+
+> 앱이 실제로 쓰는 건 `01~04` 8…아니 12장(학년×4). `ref`는 생성 일관성용 참고본이라 앱엔 불필요.
+
+### (선택) 히어로 일러스트 → `assets/img/welcome.svg`
+- [ ] `welcome.svg` — 학년 선택 화면 상단(선택). unDraw(CC0, `connection` 등). 없으면 자동 숨김.
 
 ---
 
