@@ -33,6 +33,20 @@
       onerror="this.outerHTML='<div class=&quot;img-ph ${cls}&quot;>그림 준비 중<br><small>${file}</small></div>'">`;
   }
 
+  // 장면 위 움직이는 효과: 반짝이는 별 + 신호 파동(들어옴/나감)
+  function buildFx(idx) {
+    let stars = '';
+    for (let i = 0; i < 16; i++) {
+      const x = (Math.random() * 100).toFixed(1), y = (Math.random() * 100).toFixed(1);
+      const d = (Math.random() * 3).toFixed(2), sz = (2 + Math.random() * 3).toFixed(1);
+      stars += `<span class="star" style="left:${x}%;top:${y}%;width:${sz}px;height:${sz}px;animation-delay:${d}s"></span>`;
+    }
+    let signal = '';
+    if (idx === 1) signal = '<span class="signal-wave in"></span><span class="signal-wave in" style="animation-delay:1s"></span>';      // 신호가 들어옴
+    else if (idx === 2) signal = '<span class="signal-wave out"></span><span class="signal-wave out" style="animation-delay:1s"></span>'; // 답신이 나감
+    return `<div class="story-fx">${stars}${signal}</div>`;
+  }
+
   // 빛 신호 재생 (LED 점멸 + 부저) — buildPlaybackSequence 사용
   function playSignal(morse, ledEl, unit) {
     unit = unit || 150;
@@ -77,15 +91,20 @@
     if (!data) { $('storyText').innerHTML = '먼저 <b>학년</b>을 선택해 주세요.'; $('storyImage').innerHTML = ''; $('storyDots').innerHTML = ''; return; }
     const scenes = data.story;
     const sc = scenes[sceneIdx];
-    $('storyImage').innerHTML = imgTag(sc.img, 'story-img');
-    $('storyText').innerHTML = sc.text.replace(/\n/g, '<br>');
+    const img = $('storyImage');
+    img.innerHTML = imgTag(sc.img, 'story-img') + buildFx(sceneIdx);
+    // 책장 넘김 애니메이션 재생(클래스 재적용으로 매번 트리거)
+    img.classList.remove('turn'); void img.offsetWidth; img.classList.add('turn');
+    const txt = $('storyText');
+    txt.innerHTML = sc.text.replace(/\n/g, '<br>');
+    txt.classList.remove('turn'); void txt.offsetWidth; txt.classList.add('turn');
     // 진행 점
     $('storyDots').innerHTML = scenes.map((_, i) =>
       `<span class="sdot ${i === sceneIdx ? 'on' : ''}"></span>`).join('');
     // 버튼 라벨
     const last = (phase === 'intro' && sceneIdx >= 1) ;
     $('storyNext').textContent = (phase === 'intro' && sceneIdx >= 1) ? '신호 해독하러 가기 →'
-      : (phase === 'success' && sceneIdx >= 3) ? '미션 마무리 →' : '다음 →';
+      : (phase === 'success' && sceneIdx >= 3) ? '전신키로 계속하기 →' : '다음 →';
     $('storyPrev').style.visibility = (sceneIdx === (phase === 'intro' ? 0 : 2)) ? 'hidden' : 'visible';
   }
   function storyNext() {
@@ -93,9 +112,9 @@
     if (phase === 'intro') {
       if (sceneIdx < 1) { sceneIdx++; renderStory(); }
       else { buildMission(); global.showScreen('mission'); }
-    } else { // success
+    } else { // success: 해피엔딩 후엔 ④전신키로 이어서 활동 계속 (마무리는 ⑦ 뒤에)
       if (sceneIdx < 3) { sceneIdx++; renderStory(); }
-      else { buildFinish(); global.showScreen('finish'); }
+      else { global.showScreen('telegraph'); }
     }
   }
   function storyPrev() {
@@ -201,13 +220,13 @@
   function openReply() {
     const rc = $('replyCard'); rc.style.display = '';
     $('replyPrompt').textContent = data.reply.prompt;
-    const rMorse = M.textToMorse(data.reply.answer, data.mode);
-    $('replyTarget').innerHTML = `보낼 내용: <b>${data.reply.answer}</b> &nbsp; <span class="shapes sm">${rMorse.trim().split(/\s+/).map(M.morseToShapesHTML).join('<span style="width:8px;display:inline-block"></span>')}</span>`;
+    // 정답 모스는 보여주지 않음 — 학생이 실물 모스부호표에서 직접 찾아 보내도록.
+    $('replyTarget').innerHTML = `보낼 말: <b>${data.reply.answer}</b> <span class="mut">— 테이블의 실물 모스부호표에서 찾아 전신키로 보내요!</span>`;
     replyText = ''; replyComposer = new M.HangulComposer(); replyTries = 0;
     $('replyDecodedText').textContent = '—';
     if (replyKey) replyKey.destroy();
     replyKey = global.createMorseKey($('replyKeyHost'), {
-      mode: data.mode, unit: data.mode === 'num' ? 260 : 200, sound: soundOn,
+      mode: data.mode, unit: 320, sound: soundOn,   // 넉넉한 단위(아이 친화)
       onChar: ch => {
         if (data.mode === 'ko') { replyComposer.feed(ch); replyText = replyComposer.getFullText(); }
         else replyText += ch;

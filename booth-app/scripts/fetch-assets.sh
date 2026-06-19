@@ -38,6 +38,7 @@ IPM="https://raw.githubusercontent.com/IBM/plex/master/packages/plex-mono/fonts/
 get "$IPM/IBMPlexMono-Regular.woff2"  "$FONTS/IBMPlexMono-Regular.woff2"
 get "$IPM/IBMPlexMono-SemiBold.woff2" "$FONTS/IBMPlexMono-SemiBold.woff2"
 get "$IPM/IBMPlexMono-Bold.woff2"     "$FONTS/IBMPlexMono-Bold.woff2"
+get "https://raw.githubusercontent.com/fontsource/font-files/main/fonts/google/jua/files/jua-korean-400-normal.woff2" "$FONTS/Jua-Regular.woff2"
 
 echo "── 2) 아이콘 — Lucide (assets/icons/) ──────────────────"
 LU="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons"

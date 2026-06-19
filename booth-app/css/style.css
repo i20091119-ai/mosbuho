@@ -418,3 +418,75 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
 .algo-step { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 7px 10px; background: var(--paper); border-radius: var(--r-sm); animation: fade .2s ease; }
 .algo-step.done { background: #eef7ec; font-weight: 700; }
 .algo-n { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 12px; font-weight: 800; font-family: var(--font-mono); flex-shrink: 0; }
+
+/* ════════════════ 그림책: 책장 넘김 + 장면 효과 ════════════════ */
+.story-stage { perspective: 1400px; }
+.story-image { position: relative; }
+.mut { color: var(--muted); }
+
+/* 책장 넘김 */
+.story-image.turn { animation: pageTurn .55s ease both; transform-origin: left center; }
+@keyframes pageTurn {
+  0%   { transform: rotateY(-28deg) translateX(-7%); opacity: 0; filter: brightness(1.25); }
+  60%  { opacity: 1; }
+  100% { transform: none; opacity: 1; filter: none; }
+}
+.story-text.turn { animation: textRise .5s ease both; }
+@keyframes textRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* 장면 위 효과 오버레이 */
+.story-fx { position: absolute; inset: 0; overflow: hidden; pointer-events: none; border-radius: inherit; }
+.star {
+  position: absolute; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 6px rgba(255,255,255,.9), 0 0 12px rgba(180,220,255,.6);
+  opacity: .2; animation: twinkle 2.6s ease-in-out infinite;
+}
+@keyframes twinkle { 0%,100% { opacity: .12; transform: scale(.6); } 50% { opacity: .95; transform: scale(1.15); } }
+
+/* 신호 파동: in=들어옴(수축), out=나감(확산) */
+.signal-wave {
+  position: absolute; left: 50%; top: 50%; border-radius: 50%;
+  border: 3px solid rgba(120,200,255,.75); transform: translate(-50%,-50%);
+}
+.signal-wave.in  { animation: sigIn 2s ease-out infinite; }
+.signal-wave.out { animation: sigOut 2s ease-out infinite; }
+@keyframes sigIn  { 0% { width: 300px; height: 300px; opacity: 0; } 90% { opacity: .85; } 100% { width: 26px; height: 26px; opacity: 0; } }
+@keyframes sigOut { 0% { width: 26px; height: 26px; opacity: .85; } 100% { width: 320px; height: 320px; opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .story-image.turn, .story-text.turn, .star, .signal-wave { animation: none; }
+}
+
+/* ════════════════ 귀여운 톤 (Jua 폰트 + 캔디 버튼) ════════════════ */
+@font-face { font-family:'Jua'; font-weight:400; font-display:swap;
+  src:url('../assets/fonts/Jua-Regular.woff2') format('woff2'); }
+:root { --font-cute: 'Jua', var(--font-ko); }
+
+/* 제목·버튼·이야기 텍스트에 둥근 손글씨풍 적용 (숫자/모스 mono 는 그대로) */
+h1, h2, h3,
+.home-hero h1, .grade-card h3, .home-card h3,
+.btn, .nav-btn, .mode-tab, .opt-btn, .key-btn, .mk-key,
+.story-text, .mission-prompt, .reply-target, .finish-card h2,
+.brand-meta .t, .ch-card .cl {
+  font-family: var(--font-cute);
+  letter-spacing: 0;
+}
+.story-text { font-size: clamp(18px, 2.3vw, 23px); line-height: 1.9; }
+
+/* 캔디(스티커) 버튼: 둥글게 + 아래 입체 그림자 + 누르면 쏙 */
+.btn { border-radius: 16px; box-shadow: 0 3px 0 rgba(32,36,44,.10); }
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(32,36,44,.10); }
+.btn.primary { box-shadow: 0 4px 0 var(--brand-deep); }
+.btn.ok      { box-shadow: 0 4px 0 #357a26; }
+.btn.purple  { box-shadow: 0 4px 0 #5b3573; }
+.btn.primary:active, .btn.ok:active, .btn.purple:active { box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+
+/* 카드·보기 버튼 더 동글하게 */
+.card, .grade-card, .home-card { border-radius: 22px; }
+.opt-btn { border-radius: 18px; box-shadow: 0 4px 0 rgba(32,36,44,.08); }
+.opt-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(32,36,44,.08); }
+
+/* 학년 카드 배지·제목 살짝 키워 친근하게 */
+.grade-card h3 { font-size: 23px; }
+.home-hero h1 { letter-spacing: 0; }

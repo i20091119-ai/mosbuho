@@ -173,10 +173,10 @@
 
   // ── 4. 누름시간 판정 + 타이밍 모델 ────────────────────────────────────────
   // 기준 단위(ms) → 점/대시 임계값(dd), 글자간격(cg), 단어간격(wg)
-  // 기존 트레이너 규칙 보존: dd=unit, cg=unit*2.5, wg=unit*6
+  // 학생(특히 유아)이 요소 사이에서 멈칫해도 글자가 성급히 확정되지 않도록 cg 를 넉넉히.
   function timingModel(unitMs) {
     const u = +unitMs || 200;
-    return { dd: u, cg: Math.round(u * 2.5), wg: Math.round(u * 6) };
+    return { dd: u, cg: Math.round(u * 3.5), wg: Math.round(u * 8) };
   }
   // 누름 지속시간(ms) → '.'(점) 또는 '-'(대시)
   function durationToSymbol(durMs, ddMs) {
