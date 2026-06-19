@@ -86,6 +86,8 @@
     if (playing || !curMorse) return;
     playing = true;
     $('ardPlay').disabled = true; $('ardStop').disabled = false;
+    // 개발 로그(dev 모드): 보드로 나갈 명령 가시화
+    document.dispatchEvent(new CustomEvent('hw-cmd', { detail: { cmd: 'play_morse', args: { morse: curMorse, unit }, mode: hw ? 'HW' : 'SIM' } }));
 
     // 하드웨어가 있으면 보드에 한 번 전송 (보드가 자체 타이밍으로 출력)
     if (hw) {
