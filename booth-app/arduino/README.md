@@ -32,8 +32,24 @@
 
 | 신호 | 핀 | 비고 |
 |---|---|---|
-| LED | `LED_BUILTIN` | 외부 LED 사용 시 `sketch.ino`의 `LED_PIN` 변경(+저항) |
-| 부저 | `D2` | 수동(passive) 부저 권장. `BUZZER_PIN`에서 변경 가능 |
+| 상태 LED | `LED_BUILTIN` | 외부 LED 사용 시 `sketch.ino`의 `LED_PIN` 변경(+저항) |
+| 부저 | `D2` | 수동(passive) 부저 권장. `BUZZER_PIN` |
+| 아케이드 버튼 스위치 | `D3` ↔ NO, `GND` ↔ COM | `INPUT_PULLUP`(누르면 LOW). `BUTTON_PIN` |
+| 아케이드 버튼 LED | `D4`(저항/트랜지스터 경유) → LED → `GND` | 누름 시 점등 + 신호재생 때 메시지 점멸. `BTN_LED_PIN` |
+
+> 버튼 LED 전압(5V/12V)·전류 확인 필요. 20mA 내외 5V LED면 저항만, 그 이상/12V면
+> NPN 트랜지스터(예: 2N2222)나 로직레벨 MOSFET(2N7000)로 D4 로우사이드 구동 권장.
+
+## 전신키(아케이드 버튼) 입력 경로
+
+```
+버튼 누름/뗌 → STM32(D3) → Bridge.notify("key",1|0) → Python(main.py)
+   → GET /keys (SSE) → 브라우저 arduino.js → 'mk-down'/'mk-up' 이벤트
+   → 현재 활성 전신키 위젯(morse-key.js)이 점/대시 판정
+```
+- 누름 **지속시간으로 점/대시 판정**은 브라우저(morse-key)에서 하므로 타이밍 바·소리 피드백이 그대로 동작.
+- **폴백**: 브리지가 없거나 SSE 연결 전이면, 화면 전신키(터치/클릭)와 **스페이스바**로도 입력 가능.
+  즉 하드웨어 버튼은 "추가 입력원"이라, 브리지가 죽어도 체험은 멈추지 않음.
 
 ## 버전 호환 메모
 

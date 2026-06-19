@@ -33,6 +33,21 @@
       hw = r.ok;
     } catch (e) { hw = false; }
     renderConn();
+    if (hw) connectKeyStream();   // 아케이드 버튼 이벤트(SSE) 구독
+  }
+
+  // 물리 전신키(아케이드 버튼) 이벤트 수신 → 활성 전신키 위젯으로 전달
+  let keyES = null;
+  function connectKeyStream() {
+    if (keyES || typeof EventSource === 'undefined') return;
+    try {
+      keyES = new EventSource(BRIDGE + '/keys');
+      keyES.onmessage = e => {
+        if (e.data === 'down') document.dispatchEvent(new Event('mk-down'));
+        else if (e.data === 'up') document.dispatchEvent(new Event('mk-up'));
+      };
+      keyES.onerror = () => {};   // EventSource 가 자동 재연결
+    } catch (e) { keyES = null; }
   }
   function renderConn() {
     const pill = $('ardConn');

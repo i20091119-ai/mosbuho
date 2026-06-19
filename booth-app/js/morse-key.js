@@ -122,6 +122,12 @@
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
 
+    // 외부 물리 입력(아케이드 버튼 → UNO Q → Python SSE → 'mk-down'/'mk-up' 이벤트)
+    const onExtDown = () => { if (visible()) sigOn(); };
+    const onExtUp = () => { if (visible()) sigOff(); };
+    document.addEventListener('mk-down', onExtDown);
+    document.addEventListener('mk-up', onExtUp);
+
     updMark(); renderElems();
 
     return {
@@ -138,6 +144,8 @@
         clearTimeout(charTmr); clearTimeout(wordTmr); clearInterval(durInt);
         document.removeEventListener('keydown', onKeyDown);
         document.removeEventListener('keyup', onKeyUp);
+        document.removeEventListener('mk-down', onExtDown);
+        document.removeEventListener('mk-up', onExtUp);
         container.innerHTML = '';
       }
     };
