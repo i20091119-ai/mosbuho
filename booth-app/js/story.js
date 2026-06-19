@@ -24,6 +24,7 @@
 
   function $(id) { return document.getElementById(id); }
   function maxTries() { return data.judge === 'high' ? 1 : data.judge === 'medium' ? 2 : 3; }
+  function shuffleArr(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
   // 이미지 (없으면 파일명 표시 플레이스홀더로 폴백)
   function imgTag(file, cls) {
@@ -116,7 +117,7 @@
     // 해독 카드
     let decodeInput = '';
     if (data.decode.options) {
-      decodeInput = `<div class="opt-row">${data.decode.options.map(o =>
+      decodeInput = `<div class="opt-row">${shuffleArr(data.decode.options).map(o =>
         `<button class="opt-btn" data-opt="${o}">${o}</button>`).join('')}</div>`;
     } else {
       decodeInput = `<div class="decode-typein">

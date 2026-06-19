@@ -62,9 +62,10 @@ window.STORIES = {
       { img: 'e_04_resolved.png', text: '모두가 무사하다. 교신 성공!' }
     ],
     decode: {
-      prompt: '기지가 보낸 신호를 해독하라. (무엇이 필요할까?)',
-      answer: 'WATER',             // ← 해독 단어
-      hint: true,                  // 글자 구분 힌트 토글 허용
+      prompt: '기지가 보낸 신호를 해독하라. 무엇이 필요할까?',
+      answer: 'WATER',                       // ← 해독 정답
+      options: ['WATER', 'FUEL', 'AIR'],     // ← 객관식 보기(정답 포함)
+      hint: true,                            // 글자 구분 힌트 토글 허용
       npc: '그렇다! 우리에게 필요한 건 WATER(물)다. 보급선을 보내달라!'
     },
     reply: {
@@ -91,8 +92,9 @@ window.STORIES = {
     ],
     decode: {
       prompt: '아라호가 보낸 한글 신호를 해독하라. 무엇이 부족한가?',
-      answer: '산소',              // ← 해독 단어(한글)
-      hint: false,                 // 중·고는 화면 참조표/힌트 없음
+      answer: '산소',                        // ← 해독 정답(한글)
+      options: ['산소', '연료', '신호'],      // ← 객관식 보기(정답 포함)
+      hint: false,                           // 중·고는 화면 참조표/힌트 없음
       npc: '그렇다… 산소가 떨어지고 있다. 서둘러 달라.'
     },
     reply: {

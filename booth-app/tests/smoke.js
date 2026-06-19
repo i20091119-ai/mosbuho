@@ -74,17 +74,17 @@ try {
   check('리셋 후 학년 화면', $('screen-grade').classList.contains('active'));
   click([...document.querySelectorAll('.grade-card')].find(c => c.dataset.grade === 'e'));
   click($('storyNext')); click($('storyNext'));
-  check('e 입력칸 존재', $('decodeInput') !== null);
-  $('decodeInput').value = 'water';
-  click($('decodeCheck'));
-  check('e 해독 대소문자 무시 정답', $('replyCard').style.display !== 'none');
+  check('e 해독 객관식 보기', document.querySelectorAll('.opt-btn').length >= 2);
+  click([...document.querySelectorAll('.opt-btn')].find(b => b.dataset.opt === 'WATER'));
+  check('e 객관식 정답 선택', $('replyCard').style.display !== 'none');
 
-  // 중·고(m): 한글
+  // 중·고(m): 한글 — 객관식 (키보드 타이핑 없음)
   click($('navReset'));
   click([...document.querySelectorAll('.grade-card')].find(c => c.dataset.grade === 'm'));
   click($('storyNext')); click($('storyNext'));
-  $('decodeInput').value = '산소'; click($('decodeCheck'));
-  check('m 한글 해독 정답', $('replyCard').style.display !== 'none');
+  check('m 해독 객관식 보기', document.querySelectorAll('.opt-btn').length >= 2);
+  click([...document.querySelectorAll('.opt-btn')].find(b => b.dataset.opt === '산소'));
+  check('m 한글 객관식 정답', $('replyCard').style.display !== 'none');
 
   // 확정 → 팔찌 → 아두이노 → 마무리, 통계 기록
   window.Booth.confirmMessage('SOS', 'en', 'telegraph');
