@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ============================================================================
+     gnmc_logo.svg — 경남수학문화관(GNMC) 로고 모티프 재현본
+     ----------------------------------------------------------------------------
+     ⚠ 원본 로고.png 가 프로젝트에 포함되지 않아, 지시서에 명시된 정확한 브랜드
+        팔레트(로고 심볼에서 추출한 값)로 정다각형 무지개 시퀀스를 재현했습니다.
+        원본 PNG 확보 시 같은 폴더의 gnmc_logo.png 로 교체하면 헤더가 자동 사용합니다.
+     정다각형 시퀀스(△□⬠⬡○)는 모스의 점·대시 시퀀스와 통하는 시그니처 모티프.
+   ============================================================================ -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 140" width="520" height="140" role="img" aria-label="경남수학문화관 GNMC">
+  <g transform="translate(8,18)">
+    <!-- △ 빨강 -->
+    <polygon points="46,4 86,74 6,74" fill="#C00018"/>
+    <!-- □ 주황 -->
+    <rect x="92" y="14" width="60" height="60" rx="6" fill="#F07818"/>
+    <!-- ⬠ 연두 -->
+    <polygon points="190,8 222,32 210,70 170,70 158,32" fill="#78A818"/>
+    <!-- ⬡ 파랑 -->
+    <polygon points="262,12 290,28 290,60 262,76 234,60 234,28" fill="#1878C0"/>
+    <!-- ○ 보라 -->
+    <circle cx="330" cy="44" r="32" fill="none" stroke="#784890" stroke-width="13"/>
+  </g>
+  <text x="8" y="132" font-family="'Pretendard','Noto Sans KR',sans-serif" font-weight="800" font-size="30" letter-spacing="2" fill="#2c2416">GNMC</text>
+  <text x="150" y="132" font-family="'Pretendard','Noto Sans KR',sans-serif" font-weight="700" font-size="22" fill="#5a5448">경남수학문화관</text>
+</svg>
