@@ -163,6 +163,14 @@ body {
 .btn.sm { padding: 8px 14px; font-size: 13px; min-height: 38px; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 
+/* ── 외부 이미지 아이콘 시스템 (assets/icons/*.svg) ──
+   이모지/도형 대신 톤앤매너 맞춘 외부 이미지를 사용. 파일이 없으면 onerror 로 숨겨
+   텍스트 라벨만 남는다(이모지/도형 폴백 없음). assets/ASSETS.md 의 파일명 사용. */
+.ic { width: 1.15em; height: 1.15em; object-fit: contain; vertical-align: -0.18em; margin-right: .45em; flex-shrink: 0; }
+.btn .ic, .nav-btn .ic { margin-right: .4em; }
+.ic-lg { width: 56px; height: 56px; object-fit: contain; }
+.ic-src { width: 1.1em; height: 1.1em; object-fit: contain; vertical-align: -0.15em; margin-right: .3em; }
+
 /* ── 점/대시 시그니처 도형 (점=원/빨강, 대시=둥근사각/파랑) ── */
 .m-dot, .m-dash { display: inline-block; vertical-align: middle; }
 .m-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--dot); }

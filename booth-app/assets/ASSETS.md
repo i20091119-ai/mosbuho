@@ -38,25 +38,32 @@
 
 ---
 
-## 3) 버튼·UI 아이콘 — `assets/icons/`
+## 3) 버튼·UI 아이콘 — `assets/icons/` (필수 — 코드가 이미 참조 중)
 
-**추천 소스: Lucide (lucide.dev) — ISC 라이선스 / Tabler Icons (tabler.io/icons) — MIT.** 각 아이콘 페이지에서 "Download SVG".
-가능하면 stroke 색을 흰색/브랜드색으로. (넣으면 제가 버튼에 배선합니다 — JS가 라벨을 바꾸는 버튼이 있어 정확히 연결 필요)
+코드에서 **이모지/도형을 전부 제거**하고 아래 외부 이미지 아이콘을 참조하도록 배선했습니다.
+파일을 넣으면 즉시 표시되고, 없으면 **텍스트 라벨로만** 폴백합니다(이모지/도형 폴백 없음).
 
-| 파일명(정확히) | 쓰임 | Lucide 아이콘명 |
+**추천 소스(택1, 톤 통일이 중요):**
+- **Lucide** (lucide.dev) — **ISC, 표기 불필요**. 모노라인, 세련됨 → 각 페이지 "Download SVG".
+- **Tabler Icons** (tabler.io/icons) — MIT, 표기 불필요.
+- **컬러가 필요한 비즈/성공 아이콘**은 **Twemoji**(CC-BY 4.0, 표기 권장) 컬러 SVG 추천.
+
+| 파일명(정확히) | 쓰임 | 추천 (Lucide / Twemoji 코드) |
 |---|---|---|
-| `sound.svg` / `mute.svg` | 소리 켜짐/꺼짐 | `volume-2` / `volume-x` |
-| `play.svg` / `stop.svg` | 신호 재생/정지 | `play` / `square` |
-| `camera.svg` | 카메라 켜기 | `camera` |
-| `target.svg` | 도전(챌린지) | `target` |
-| `refresh.svg` | 초기화/재연결 | `rotate-ccw` |
-| `check.svg` | 확정 | `check` |
-| `bulb.svg` | LED/신호 안내 | `lightbulb` |
-| `chip.svg` | 아두이노 | `cpu` |
+| `play.svg` | 신호 재생·보내기 | Lucide `play` |
+| `stop.svg` | 정지 | Lucide `square` |
+| `sound.svg` / `mute.svg` | 소리 켜짐/꺼짐 | Lucide `volume-2` / `volume-x` |
+| `camera.svg` | 카메라 켜기/꺼짐 | Lucide `camera` |
+| `camera-off.svg` | 카메라 오류 | Lucide `camera-off` |
+| `refresh.svg` | 인식 초기화·하드웨어 재연결 | Lucide `rotate-ccw` |
+| `check.svg` | 챌린지 글자 완료 | Lucide `check` |
+| `success.svg` | 챌린지 전송 성공(축하) | Lucide `party-popper` 또는 Twemoji `1f389` 🎉 |
+| `telegraph.svg` | 통계: 전신키 출처 | Lucide `radio-tower` |
+| `bead-red.svg` | 빨강 보정(점=빨강 비즈) | Twemoji `1f534` 🔴 (컬러) |
+| `bead-blue.svg` | 파랑 보정(대시=파랑 비즈) | Twemoji `1f535` 🔵 (컬러) |
 
-> **친근한 컬러 이모지 스타일**을 원하면: OpenMoji(openmoji.org, CC BY-SA → 저작권 표기 필요) 또는
-> Twemoji(github.com/jdecked/twemoji, CC-BY 4.0 → 표기 필요)의 SVG를 받아 같은 파일명으로 저장해도 됩니다.
-> (유치~고등 대상이라 컬러 이모지 스타일도 잘 맞습니다.)
+> 권장 규격: **24×24 SVG**, stroke 색은 흰색 또는 브랜드색(`#F07818`/`#784890`). 버튼 안에서 `1.15em` 크기로 렌더됩니다.
+> 통계의 카메라 출처 아이콘은 위 `camera.svg`를 공유합니다(별도 파일 불필요).
 
 ---
 

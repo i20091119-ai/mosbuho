@@ -97,7 +97,7 @@
           </div>
 
           <div class="card" style="margin-top:16px">
-            <div class="card-title">해독된 메시지 <span style="display:flex;gap:8px"><button class="btn sm ok" id="tgSend">▶ 신호로 보내기</button><button class="btn sm" id="tgClear">지우기</button></span></div>
+            <div class="card-title">해독된 메시지 <span style="display:flex;gap:8px"><button class="btn sm ok" id="tgSend"><img class="ic" src="assets/icons/play.svg" alt="" onerror="this.style.display='none'">신호로 보내기</button><button class="btn sm" id="tgClear">지우기</button></span></div>
             <div class="decoded" id="tgDecoded"><span class="ph">여기에 해독 결과가 나타나요</span></div>
           </div>
 
@@ -111,14 +111,14 @@
           <div class="card">
             <div class="card-title">
               <span id="tgRefTitle">모스부호 표</span>
-              <button class="btn sm" id="tgSound">🔊 소리 켜짐</button>
+              <button class="btn sm" id="tgSound"><img class="ic" id="tgSoundIc" src="assets/icons/sound.svg" alt="" onerror="this.style.display='none'"><span id="tgSoundTxt">소리 켜짐</span></button>
             </div>
             <div class="ref-grid en" id="tgRef"></div>
           </div>
           <div class="card" style="margin-top:16px">
             <div class="card-title">누르는 속도 <span class="mono" id="tgSpeedV" style="color:var(--brand-deep)">200ms</span></div>
             <input type="range" min="80" max="400" value="200" id="tgSpeed">
-            <div class="timing-labels"><span>⚡ 빠르게</span><span>🐢 천천히</span></div>
+            <div class="timing-labels"><span>빠르게</span><span>천천히</span></div>
           </div>
         </div>
       </div>
@@ -135,15 +135,15 @@
               <canvas id="camOverlay" class="overlay"></canvas>
               <div class="cam-roi-hint" id="camRoi"></div>
               <div class="cam-msg" id="camMsg">
-                <div style="font-size:40px">📷</div>
+                <img class="ic-lg" src="assets/icons/camera.svg" alt="" onerror="this.style.display='none'">
                 <div>카메라를 켜고 비즈를 인식합니다</div>
                 <button class="btn primary" id="camStart">카메라 켜기</button>
               </div>
             </div>
             <div class="cam-controls">
               <button class="btn" id="camStop" disabled>정지</button>
-              <button class="btn purple" id="camCalibRed" disabled>🔴 빨강 보정</button>
-              <button class="btn purple" id="camCalibBlue" disabled>🔵 파랑 보정</button>
+              <button class="btn purple" id="camCalibRed" disabled><img class="ic" src="assets/icons/bead-red.svg" alt="" onerror="this.style.display='none'">빨강 보정</button>
+              <button class="btn purple" id="camCalibBlue" disabled><img class="ic" src="assets/icons/bead-blue.svg" alt="" onerror="this.style.display='none'">파랑 보정</button>
               <button class="btn" id="camReset" disabled>인식 초기화</button>
               <button class="btn ok" id="camConfirm" disabled>이 배열로 확정 → 신호확인</button>
             </div>
@@ -187,9 +187,9 @@
               <div class="led" id="ardLed"></div>
               <div class="pattern-strip" id="ardPattern"><span style="color:var(--muted);font-size:13px">확정한 메시지가 여기에 표시됩니다</span></div>
               <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-                <button class="btn primary" id="ardPlay">▶ 신호 재생 (LED·부저)</button>
-                <button class="btn" id="ardStop" disabled>■ 정지</button>
-                <button class="btn" id="ardReconnect">하드웨어 재연결 시도</button>
+                <button class="btn primary" id="ardPlay"><img class="ic" src="assets/icons/play.svg" alt="" onerror="this.style.display='none'">신호 재생 (LED·부저)</button>
+                <button class="btn" id="ardStop" disabled><img class="ic" src="assets/icons/stop.svg" alt="" onerror="this.style.display='none'">정지</button>
+                <button class="btn" id="ardReconnect"><img class="ic" src="assets/icons/refresh.svg" alt="" onerror="this.style.display='none'">하드웨어 재연결 시도</button>
               </div>
             </div>
           </div>

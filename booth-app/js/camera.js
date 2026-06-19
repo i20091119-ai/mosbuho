@@ -66,7 +66,7 @@
       ['camStop', 'camCalibRed', 'camCalibBlue', 'camReset', 'camConfirm'].forEach(id => $(id).disabled = false);
       loop();
     } catch (e) {
-      $('camMsg').innerHTML = '<div style="font-size:40px">🚫</div><div>카메라를 열 수 없습니다.<br>권한을 허용했는지, UNO Q에 웹캠이 연결됐는지 확인하세요.</div>';
+      $('camMsg').innerHTML = '<img class="ic-lg" src="assets/icons/camera-off.svg" alt="" onerror="this.style.display=\'none\'"><div>카메라를 열 수 없습니다.<br>권한을 허용했는지, UNO Q에 웹캠이 연결됐는지 확인하세요.</div>';
     }
   }
   function stop() {
@@ -74,7 +74,7 @@
     if (raf) cancelAnimationFrame(raf);
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
     $('camMsg').style.display = 'flex';
-    $('camMsg').innerHTML = '<div style="font-size:40px">📷</div><div>카메라가 꺼졌습니다</div><button class="btn primary" id="camStart">카메라 켜기</button>';
+    $('camMsg').innerHTML = '<img class="ic-lg" src="assets/icons/camera.svg" alt="" onerror="this.style.display=\'none\'"><div>카메라가 꺼졌습니다</div><button class="btn primary" id="camStart">카메라 켜기</button>';
     $('camStart').onclick = start;
     ['camStop', 'camCalibRed', 'camCalibBlue', 'camReset', 'camConfirm'].forEach(id => $(id).disabled = true);
   }
@@ -238,7 +238,7 @@
       calib.blue = { test: h => angDist(h, center) <= tol };
     }
     calib.satMin = Math.max(0.2, Math.min(SAT_MIN, sMin * 0.7));
-    setCalibMsg(`${which === 'red' ? '🔴 빨강' : '🔵 파랑'} 보정 완료 — 기준 색상 ${Math.round(center)}° (허용 ±${tol}°).`);
+    setCalibMsg(`${which === 'red' ? '빨강' : '파랑'} 보정 완료 — 기준 색상 ${Math.round(center)}° (허용 ±${tol}°).`);
   }
   // 원형(0–360) 평균 — 빨강 경계 안전
   function circularMeanHue(img, which) {

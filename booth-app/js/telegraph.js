@@ -153,11 +153,12 @@
       const cls = i < chIdx ? 'done' : i === chIdx ? 'cur' : '';
       const col = i < chIdx ? 'var(--ok)' : i === chIdx ? 'var(--brand)' : 'var(--muted)';
       h += `<div class="ch-card ${cls}"><div class="cl" style="color:${col}">${c}</div>
-        <div class="shapes sm">${M.morseToShapesHTML(morse)}</div>${i < chIdx ? '✓' : ''}</div>`;
+        <div class="shapes sm">${M.morseToShapesHTML(morse)}</div>${i < chIdx ? '<img class="ic" src="assets/icons/check.svg" alt="완료" onerror="this.style.display=\'none\'">' : ''}</div>`;
     }
     h += '</div>';
     if (chIdx >= chWord.length) {
-      h += `<div style="text-align:center;margin-top:12px;color:var(--ok);font-weight:800;font-size:18px">🎉 "${chWord}" 전송 성공!
+      h += `<div style="text-align:center;margin-top:12px;color:var(--ok);font-weight:800;font-size:18px">
+        <img class="ic" src="assets/icons/success.svg" alt="" onerror="this.style.display='none'">"${chWord}" 전송 성공!
         <button class="btn sm ok" id="tgChNext" style="margin-left:8px">다음 →</button></div>`;
     }
     $('tgChArea').innerHTML = h;
@@ -208,7 +209,11 @@
     $('tgChBtn').onclick = toggleCh;
     $('tgSound').onclick = () => {
       soundOn = !soundOn;
-      $('tgSound').textContent = soundOn ? '🔊 소리 켜짐' : '🔇 소리 꺼짐';
+      $('tgSoundTxt').textContent = soundOn ? '소리 켜짐' : '소리 꺼짐';
+      const ic = $('tgSoundIc');
+      ic.style.display = '';
+      ic.src = soundOn ? 'assets/icons/sound.svg' : 'assets/icons/mute.svg';
+      ic.onerror = () => { ic.style.display = 'none'; };
     };
     $('tgSpeed').oninput = function () {
       tm = M.timingModel(this.value);
