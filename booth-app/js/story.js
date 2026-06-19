@@ -220,7 +220,7 @@
     });
     $('replyCheck').onclick = checkReply;
     $('replyClear').onclick = () => { replyText = ''; replyComposer = new M.HangulComposer(); replyKey.reset(); $('replyDecodedText').textContent = '—'; };
-    rc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (rc.scrollIntoView) rc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   function checkReply() {

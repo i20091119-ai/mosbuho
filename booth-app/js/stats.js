@@ -88,7 +88,7 @@
       ? recent.map(r => {
           const tm = new Date(r.ts).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
           const icon = r.source === 'camera' ? 'camera' : 'telegraph';
-          const label = r.source === 'camera' ? '카메라' : '전신키';
+          const label = r.source === 'camera' ? '카메라' : r.source === 'mission' ? '미션' : '전신키';
           // 아이콘 이미지 없으면 텍스트 라벨로 폴백(이모지/도형 미사용)
           const src = `<img class="ic-src" src="assets/icons/${icon}.svg" alt="${label}" onerror="this.replaceWith(document.createTextNode('[${label}] '))">`;
           return `<div>${src}<b>${escapeHtml(r.text)}</b> <span style="color:var(--muted)">· ${tm}</span></div>`;
