@@ -66,8 +66,10 @@
       { s: 'arduino', no: '5', c: 'var(--c-purple)', t: '아두이노 신호 확인', d: '완성한 메시지를 LED·부저로 출력해요.', tag: '실물', tagc: 'var(--c-purple)' },
       { s: 'stats', no: '∑', c: 'var(--c-green)', t: '데이터 통계', d: '오늘 모두가 만든 메시지를 한눈에.', tag: '수학', tagc: 'var(--c-green)' }
     ];
+    // 카드 일러스트: assets/img/step-<screen>.svg 가 있으면 표시, 없으면 onerror 로 제거
     document.getElementById('homeCards').innerHTML = cards.map(c => `
       <button class="home-card" data-screen="${c.s}">
+        <img class="illust" src="assets/img/step-${c.s}.svg" alt="" onerror="this.remove()">
         <span class="badge" style="background:${c.c}">${c.no}</span>
         <h3>${c.t}</h3>
         <p>${c.d}</p>
