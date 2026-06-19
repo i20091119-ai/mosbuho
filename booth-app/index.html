@@ -21,9 +21,9 @@
   <!-- ════════ 헤더 ════════ -->
   <header class="app-header">
     <div class="brand-row">
-      <!-- 원본 로고.png 확보 시 src 를 assets/gnmc_logo.png 로 교체 -->
-      <img class="brand-logo" src="assets/gnmc_logo.svg" alt="경남수학문화관 GNMC"
-           onerror="this.style.display='none'">
+      <!-- 원본 PNG 가 있으면 자동 사용, 없으면 SVG 재현본으로 폴백 -->
+      <img class="brand-logo" src="assets/gnmc_logo.png" alt="경남수학문화관 GNMC"
+           onerror="this.onerror=null; this.src='assets/gnmc_logo.svg';">
       <div class="brand-meta">
         <span class="t">알고리즘으로 잠그고 수학으로 푸는 비밀 팔찌</span>
         <span class="s">경남수학문화관 · 2026 경남직업교육박람회 미래기술 체험존</span>
