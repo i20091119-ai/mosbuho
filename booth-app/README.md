@@ -40,11 +40,18 @@ booth-app/
 │   ├── stats.js            데이터 수집/통계 (어댑터 패턴)
 │   └── app.js              셸: 화면 전환 · 홈 · 공통 메시지 버스
 ├── assets/
-│   └── gnmc_logo.svg       GNMC 로고 모티프(재현본 — 아래 참고)
+│   ├── gnmc_logo.svg       GNMC 로고 모티프(재현본; PNG 있으면 PNG 우선)
+│   ├── favicon.svg         파비콘(점·대시 모티프)
+│   ├── fonts/              Pretendard + IBM Plex Mono (로컬 번들)
+│   ├── icons/              Lucide + Twemoji 아이콘 12종
+│   └── img/                (선택) 일러스트 welcome/step-*.svg
+├── scripts/
+│   └── fetch-assets.sh     라이선스 프리 폰트·아이콘 자동 다운로드
 ├── arduino/                Arduino App Lab 앱 (UNO Q 하드웨어 연동)
 │   ├── python/main.py      Linux(MPU) 브리지 HTTP 서버
 │   ├── sketch/sketch.ino   STM32(MCU) LED·부저 출력
 │   └── README.md           UNO Q 실행법
+├── CHECKLIST.md            직접 넣을 에셋 체크리스트
 └── README.md
 ```
 
@@ -86,8 +93,8 @@ python3 -m http.server 8000
 부스 조명/배경이 바뀌면 **30초 재보정**으로 인식 정확도를 회복합니다.
 
 1. `카메라 인식` 화면에서 **카메라 켜기**.
-2. 트레이의 **빨강 비즈**를 화면 가운데(점선 영역)에 크게 보이게 두고 **🔴 빨강 보정** 클릭.
-3. **파랑 비즈**로 바꿔 두고 **🔵 파랑 보정** 클릭.
+2. 트레이의 **빨강 비즈**를 화면 가운데(점선 영역)에 크게 보이게 두고 **빨강 보정** 버튼 클릭.
+3. **파랑 비즈**로 바꿔 두고 **파랑 보정** 버튼 클릭.
 4. 보정 상태 메시지에 기준 색상(Hue)이 표시되면 완료.
 
 > 인식은 **색(HSV의 Hue) 기반**입니다. 길이가 아니라 색으로 점/대시를 구분하므로 밝기 변동에 강합니다.
@@ -110,12 +117,11 @@ python3 -m http.server 8000
   (빨강 `#C00018`, 주황 `#F07818`, 연두 `#78A818`, 파랑 `#1878C0`, 보라 `#784890` 등).
 - **기능색과 장식색 분리**: 점=빨강 / 대시=파랑은 비즈 의미와 일치하는 기능색이므로,
   UI 장식에는 주황·연두·보라를 사용해 혼동을 막았습니다.
-- 폰트: 로컬 시스템 폰트 스택(설치 시 Pretendard/Noto, 아니면 시스템 sans). 외부 폰트 요청 없음.
-  정체성에 폰트까지 고정하려면 `assets/fonts/`에 woff2 를 넣고 `css/style.css`의 `@font-face` 주석 해제.
+- 폰트: Pretendard(한글) + IBM Plex Mono(숫자·모스)를 `assets/fonts/`에 **로컬 번들**(외부 요청 없음).
+  미설치 환경 대비 시스템 폰트(Noto Sans CJK 등) 폴백도 유지.
 
-> ⚠️ **로고 파일 안내**: 원본 `로고.png`가 프로젝트에 포함되지 않아 `assets/gnmc_logo.svg`로
-> 로고 모티프를 **재현**했습니다. 원본을 확보하면 `assets/gnmc_logo.png`로 저장하고
-> `index.html`의 `<img src="assets/gnmc_logo.svg">`를 `gnmc_logo.png`로 교체하세요.
+> **로고**: 헤더는 `assets/gnmc_logo.png`를 우선 사용하고, 없으면 제작한 재현본 `gnmc_logo.svg`로 자동 폴백합니다.
+> 원본 PNG를 `assets/gnmc_logo.png`로 저장하면 **코드 수정 없이** 적용됩니다.
 
 ---
 
@@ -125,3 +131,17 @@ python3 -m http.server 8000
 - 키보드(스페이스바)·마우스·터치 모두 지원. `prefers-reduced-motion` 존중.
 - 화면 꺼짐 방지(Wake Lock), 3분 무입력 시 홈 복귀(상설 운영 대비).
 - 전체가 외부 라이브러리 없이 순수 JS — UNO Q에서 인터넷 없이 완전 오프라인 동작.
+
+---
+
+## 에셋 출처 / 라이선스 (번들된 것)
+
+`scripts/fetch-assets.sh` 로 받아 `assets/` 에 포함한 라이선스 프리 에셋:
+
+- **폰트**: Pretendard (SIL OFL 1.1), IBM Plex Mono (SIL OFL 1.1) — 표기 불필요
+- **아이콘(모노라인)**: Lucide (ISC License) — 표기 불필요
+- **아이콘(컬러: 🎉🔴🔵)**: Twemoji © Twitter/X, **CC-BY 4.0** — 표기 권장:
+  > Icons: Twemoji by Twitter, licensed under CC-BY 4.0
+- 미포함(직접 추가): GNMC 공식 로고(`assets/gnmc_logo.png`), 단계 일러스트(`assets/img/`, 예: unDraw CC0)
+
+세부 목록·받는 법: [`CHECKLIST.md`](CHECKLIST.md) / 자동 다운로드: `bash scripts/fetch-assets.sh`

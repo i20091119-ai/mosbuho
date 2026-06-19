@@ -158,7 +158,7 @@
     h += '</div>';
     if (chIdx >= chWord.length) {
       h += `<div style="text-align:center;margin-top:12px;color:var(--ok);font-weight:800;font-size:18px">
-        <img class="ic" src="assets/icons/success.svg" alt="" onerror="this.style.display='none'">"${chWord}" 전송 성공!
+        <img class="ic ic-color" src="assets/icons/success.svg" alt="" onerror="this.style.display='none'">"${chWord}" 전송 성공!
         <button class="btn sm ok" id="tgChNext" style="margin-left:8px">다음 →</button></div>`;
     }
     $('tgChArea').innerHTML = h;

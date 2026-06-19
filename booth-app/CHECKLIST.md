@@ -9,15 +9,16 @@
 
 ## 한눈에 보기
 
-| # | 항목 | 개수 | 폴더 | 필수도 |
+| # | 항목 | 개수 | 폴더 | 상태 |
 |---|---|---|---|---|
-| 1 | 로고 | 1 | `assets/` | 권장(없으면 재현 SVG 사용) |
-| 2 | 폰트 | 4 | `assets/fonts/` | 권장(없으면 시스템 폰트) |
-| 3 | 단계 일러스트 | 5 | `assets/img/` | 선택(없으면 표시 안 함) |
-| 4 | 아이콘 | 12 | `assets/icons/` | **필수**(없으면 텍스트만) |
-| 5 | 배경 사진 | 1 | `assets/img/` | 선택(미배선) |
+| 1 | 로고 | 1 | `assets/` | ⬜ 직접 필요(없으면 재현 SVG 사용) |
+| 2 | 폰트 | 4 | `assets/fonts/` | ✅ **자동 포함됨** |
+| 3 | 단계 일러스트 | 5 | `assets/img/` | ⬜ 직접 필요(선택) |
+| 4 | 아이콘 | 12 | `assets/icons/` | ✅ **자동 포함됨** |
+| 5 | 배경 사진 | 1 | `assets/img/` | ⬜ 직접 필요(선택·미배선) |
 
-> 파비콘(`assets/favicon.svg`)은 **이미 제가 만들어 넣었음** → 받을 필요 없음.
+> ✅ 폰트·아이콘은 `scripts/fetch-assets.sh` 로 **이미 받아서 커밋**했고 `@font-face` 도 활성화했습니다.
+> 파비콘(`assets/favicon.svg`)도 제작 완료. → **남은 건 로고(1)·일러스트(3)·배경(5)뿐**이며 모두 선택/대체 가능합니다.
 
 ---
 
@@ -30,7 +31,10 @@
 
 ---
 
-## 2. 폰트  →  `assets/fonts/`  (전부 SIL OFL 1.1 · 저작권 표기 불필요)
+## 2. 폰트  →  `assets/fonts/`  ✅ 자동 포함 완료 (SIL OFL 1.1 · 표기 불필요)
+
+> `scripts/fetch-assets.sh` 로 받아 커밋했고 `css/style.css` 의 `@font-face` 도 활성화됨. **추가 작업 불필요.**
+> (Noto Sans KR 등 다른 한글 폰트로 바꾸고 싶을 때만 교체.)
 
 - [ ] **`PretendardVariable.woff2`** — 한글 본문 (가변폰트 1개로 굵기 400~800 전부 커버)
   - 받는 곳: github.com/orioncactus/pretendard → `packages/pretendard/dist/web/variable/`
@@ -59,7 +63,10 @@ undraw.co 에서 색을 `#F07818`(브랜드 주황)로 지정 후 **SVG 다운�
 
 ---
 
-## 4. 아이콘  →  `assets/icons/`  (12개 · 코드가 이미 참조 중 · **필수**)
+## 4. 아이콘  →  `assets/icons/`  ✅ 자동 포함 완료 (Lucide ISC + Twemoji CC-BY)
+
+> `scripts/fetch-assets.sh` 로 12개 전부 받아 커밋함. **추가 작업 불필요.**
+> 다른 아이콘으로 바꾸고 싶을 때만 같은 파일명으로 교체. (받은 목록은 아래 참고)
 
 **톤 통일이 중요** → 한 세트로 받기. 모노라인은 **Lucide**(lucide.dev, ISC·표기 불필요),
 컬러가 필요한 3개는 **Twemoji**(CC-BY 4.0, 표기 권장) 추천. 규격: **24×24 SVG**.

@@ -46,13 +46,7 @@
   --font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'DejaVu Sans Mono', ui-monospace, 'Menlo', monospace;
 }
 
-/* ── (선택) 폰트 로컬 번들 — 인터넷 불필요, 모두 SIL OFL 1.1 (라이선스 프리) ──
-   아래 파일들을 assets/fonts/ 에 넣고 이 블록 주석을 해제하면 정확한 정체성 폰트로 고정됩니다.
-   필요 파일:
-     · PretendardVariable.woff2      (가변폰트 1개로 400~800 전부 커버)
-     · IBMPlexMono-Regular.woff2     (400)
-     · IBMPlexMono-SemiBold.woff2    (600)
-     · IBMPlexMono-Bold.woff2        (700; 800 표기는 700로 폴백)
+/* ── 로컬 번들 폰트 (SIL OFL 1.1) — scripts/fetch-assets.sh 로 받아 assets/fonts/ 에 포함 ── */
 @font-face { font-family:'Pretendard'; font-weight:400 800; font-display:swap;
   src:url('../assets/fonts/PretendardVariable.woff2') format('woff2-variations'); }
 @font-face { font-family:'IBM Plex Mono'; font-weight:400; font-display:swap;
@@ -61,7 +55,6 @@
   src:url('../assets/fonts/IBMPlexMono-SemiBold.woff2') format('woff2'); }
 @font-face { font-family:'IBM Plex Mono'; font-weight:700; font-display:swap;
   src:url('../assets/fonts/IBMPlexMono-Bold.woff2') format('woff2'); }
-─────────────────────────────────────────────────────────────────────────── */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; }
@@ -170,6 +163,11 @@ body {
 .btn .ic, .nav-btn .ic { margin-right: .4em; }
 .ic-lg { width: 56px; height: 56px; object-fit: contain; }
 .ic-src { width: 1.1em; height: 1.1em; object-fit: contain; vertical-align: -0.15em; margin-right: .3em; }
+/* Lucide(모노라인) 아이콘은 <img>로 로드 시 검정으로 렌더 → 컬러 버튼/어두운 배경에선 흰색으로.
+   Twemoji 컬러 아이콘(.ic-color)은 원색 유지를 위해 필터 제외. */
+.btn.primary .ic:not(.ic-color),
+.btn.ok .ic:not(.ic-color),
+.cam-msg .ic-lg:not(.ic-color) { filter: brightness(0) invert(1); }
 
 /* ── 점/대시 시그니처 도형 (점=원/빨강, 대시=둥근사각/파랑) ── */
 .m-dot, .m-dash { display: inline-block; vertical-align: middle; }
