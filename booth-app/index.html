@@ -6,13 +6,10 @@
 <title>경남수학문화관 · 알고리즘으로 잠그고 수학으로 푸는 비밀 팔찌</title>
 <meta name="description" content="2026 경남직업교육박람회 · 경남수학문화관 모스부호 phygital 체험 부스 앱">
 
-<!-- ── 장식 에셋만 CDN (핵심 로직은 로컬·오프라인 동작) ── -->
-<!-- 한글: Pretendard / 숫자·모스: IBM Plex Mono. 미로드 시 시스템 폰트로 폴백 -->
-<link rel="preconnect" href="https://cdn.jsdelivr.net">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<!-- ── 완전 오프라인: 외부 요청 0. UNO Q 로컬 구동 전제 ──
+     폰트는 로컬 시스템 폰트 스택 사용(설치돼 있으면 Pretendard/Noto, 아니면 시스템 sans).
+     폰트를 박람회 정체성에 정확히 맞추려면 assets/fonts/ 에 woff2 를 넣고
+     css/style.css 의 @font-face 주석을 활성화하세요. -->
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -247,9 +244,9 @@
   </main>
 </div>
 
-<!-- ── 차트 라이브러리 (CDN · 미로드 시 HTML 막대그래프 폴백) ── -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<!-- ── 핵심 로직 (전부 로컬·오프라인 동작) ── -->
+<!-- ── 전부 로컬·오프라인 동작 (외부 의존성 없음) ──
+     통계 차트는 외부 라이브러리 없이 순수 HTML 막대그래프로 렌더링. -->
+
 <script src="js/morse-engine.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/stats.js"></script>

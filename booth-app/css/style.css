@@ -39,9 +39,25 @@
 
   --r-sm: 10px; --r-md: 16px; --r-lg: 24px; --r-pill: 999px;
 
-  --font-ko: 'Pretendard', 'Noto Sans KR', -apple-system, 'Apple SD Gothic Neo', sans-serif;
-  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, 'Menlo', monospace;
+  /* 로컬 폰트 스택 — 외부 요청 없음. 설치돼 있으면 Pretendard/Noto 사용,
+     아니면 Debian(UNO Q) 기본 한글 폰트(Noto Sans CJK)나 시스템 sans 로 폴백 */
+  --font-ko: 'Pretendard', 'Noto Sans KR', 'Noto Sans CJK KR', 'Apple SD Gothic Neo',
+             -apple-system, 'Malgun Gothic', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'DejaVu Sans Mono', ui-monospace, 'Menlo', monospace;
 }
+
+/* ── (선택) 폰트 로컬 번들 ──────────────────────────────────────────────────
+   박람회/상설 정체성에 폰트까지 정확히 고정하려면 woff2 파일을
+   assets/fonts/ 에 넣고 아래 주석을 해제하세요. 인터넷 불필요.
+@font-face {
+  font-family: 'Pretendard'; font-weight: 400 800; font-display: swap;
+  src: url('../assets/fonts/PretendardVariable.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'IBM Plex Mono'; font-weight: 400 700; font-display: swap;
+  src: url('../assets/fonts/IBMPlexMono-Regular.woff2') format('woff2');
+}
+─────────────────────────────────────────────────────────────────────────── */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; }
