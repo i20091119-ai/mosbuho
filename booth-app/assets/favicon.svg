@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- favicon.svg — 부스앱 파비콘 (직접 제작 · 라이선스 프리 · 오프라인)
+     모티프: 점(빨강 원) + 대시(파랑 둥근사각) = 모스 시그니처. 무지각 폴리곤 색조. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#faf8f4" stroke="#e6e0d6" stroke-width="2"/>
+  <circle cx="22" cy="24" r="9" fill="#C00018"/>
+  <rect x="14" y="38" width="36" height="13" rx="6.5" fill="#1878C0"/>
+  <circle cx="45" cy="22" r="6" fill="#F07818"/>
+</svg>
