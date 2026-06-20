@@ -135,9 +135,10 @@ body {
 }
 .card + .card { margin-top: 16px; }
 .card-title {
-  font-size: 12px; font-weight: 800; color: var(--muted);
-  letter-spacing: .16em; text-transform: uppercase; margin-bottom: 14px;
-  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Jua', var(--font-ko);
+  font-size: 15px; font-weight: 400; color: var(--ink-soft);
+  letter-spacing: 0; text-transform: none; margin-bottom: 14px;
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
 }
 
 .btn {
@@ -545,4 +546,24 @@ h1, h2, h3,
 @media (prefers-reduced-motion: reduce) {
   .doodle, .home-motif .m-dot, .home-motif .m-dash { animation: none; }
   .btn.primary:hover { animation: none; }
+}
+
+/* ════════════════ 전체 점검 조정(마감) ════════════════ */
+/* 비활성 버튼은 팝 금지 */
+.btn:disabled, .btn:disabled:hover, .btn:disabled:active { transform: none; animation: none; box-shadow: none; }
+
+/* 마무리 화면: 로켓 엠블럼 + 반짝이 */
+.finish-emblem img { width: 72px; height: 72px; animation: floaty 5s ease-in-out infinite; }
+.finish-spark { width: 1.2em; height: 1.2em; vertical-align: -0.2em; margin-right: .3em; }
+
+/* 도안은 텍스트 가독 방해 안 되게 살짝 옅게 */
+.doodle { opacity: .82; }
+
+/* 모션 최소화 설정 시 팝/호버 변형까지 정지 */
+@media (prefers-reduced-motion: reduce) {
+  .btn, .opt-btn, .grade-card, .home-card, .nav-btn, .grade-badge,
+  .home-card .badge, .finish-emblem img {
+    transition: none !important; animation: none !important;
+  }
+  .btn:hover, .opt-btn:hover, .grade-card:hover, .nav-btn.active { transform: none !important; }
 }

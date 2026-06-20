@@ -248,7 +248,7 @@
     const ok = norm(replyText) === norm(data.reply.answer);
     const fb = $('replyFb');
     if (ok) {
-      fb.className = 'mission-feedback ok'; fb.textContent = data.reply.npc + ' 🚀'.replace('🚀','');
+      fb.className = 'mission-feedback ok'; fb.textContent = data.reply.npc;
       // 통계 기록(개인정보 없이)
       if (global.Stats) global.Stats.record({ text: data.reply.answer, mode: data.mode, source: 'mission', ts: Date.now() });
       setTimeout(showSuccessStory, 900);
@@ -271,7 +271,7 @@
       : '';
     $('finishWrap').innerHTML = `
       <div class="card finish-card">
-        <div class="finish-emblem">🛰️</div>
+        <div class="finish-emblem"><img src="assets/deco/rocket.svg" alt="" onerror="this.remove()"></div>
         <h2>미션 성공! 너는 멋진 우주통신사야</h2>
         <div class="concept-box">${data.concept}</div>
         <div class="concept-terms">
@@ -279,7 +279,7 @@
           <span><b>복호화</b> = 신호 → 메시지로 풀기 (해독·카메라)</span>
           <span><b>암호문</b> = 그 결과로 나온 신호</span>
         </div>
-        <p class="finish-gift">🎁 엠버시 입체도형 퍼즐 키트를 받아 집에서 조립해 보세요!</p>
+        <p class="finish-gift"><img class="finish-spark" src="assets/deco/sparkle.svg" alt="" onerror="this.remove()">엠버시 입체도형 퍼즐 키트를 받아 집에서 조립해 보세요!</p>
         <button class="btn primary" id="finishReset">새 친구를 위해 처음으로 ↺</button>
       </div>${cipher}`;
     $('finishReset').onclick = () => global.Booth.resetAll();
