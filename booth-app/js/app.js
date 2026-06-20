@@ -67,6 +67,18 @@
     motif.innerHTML = pat.map(p => p === 'dot'
       ? '<span class="m-dot" style="width:22px;height:22px"></span>'
       : '<span class="m-dash" style="width:58px;height:22px;border-radius:11px"></span>').join('');
+
+    // 손그림풍 떠다니는 장식 (학년 화면 히어로)
+    const hero = document.querySelector('#screen-grade .home-hero');
+    if (hero && !hero.querySelector('.hero-deco')) {
+      const deco = document.createElement('div');
+      deco.className = 'hero-deco';
+      deco.setAttribute('aria-hidden', 'true');
+      deco.innerHTML = ['star d1', 'sparkle d2', 'rocket d3', 'planet d4', 'sparkle d5', 'star d6']
+        .map(s => { const f = s.split(' ')[0]; return `<img class="doodle ${s.split(' ')[1]}" src="assets/deco/${f}.svg" alt="" onerror="this.remove()">`; })
+        .join('');
+      hero.appendChild(deco);
+    }
   }
 
   // ── ⑥ 팔찌 안내 ──

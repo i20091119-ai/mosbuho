@@ -490,3 +490,59 @@ h1, h2, h3,
 /* 학년 카드 배지·제목 살짝 키워 친근하게 */
 .grade-card h3 { font-size: 23px; }
 .home-hero h1 { letter-spacing: 0; }
+
+/* ════════════════ 손그림 장식 + 팝 효과 (더 귀엽게) ════════════════ */
+.screen { overflow-x: hidden; }   /* 장식이 가로 스크롤 만들지 않게 */
+
+/* 히어로 떠다니는 도안 */
+.home-hero { position: relative; }
+.hero-deco { position: absolute; inset: -8px 0 0 0; pointer-events: none; z-index: 0; }
+.home-hero > *:not(.hero-deco) { position: relative; z-index: 1; }
+.doodle { position: absolute; width: 46px; opacity: .9; filter: drop-shadow(0 3px 4px rgba(0,0,0,.08)); }
+.doodle.d1 { left: 6%;  top: 8%;  width: 40px; animation: bob 4s ease-in-out infinite; }
+.doodle.d2 { left: 16%; top: 52%; width: 30px; animation: twinkle2 3s ease-in-out infinite; }
+.doodle.d3 { right: 8%; top: 10%; width: 52px; animation: floaty 5s ease-in-out infinite; }
+.doodle.d4 { right: 14%; top: 54%; width: 60px; animation: spinSlow 16s linear infinite; }
+.doodle.d5 { right: 32%; top: 4%;  width: 24px; animation: twinkle2 2.4s ease-in-out infinite .6s; }
+.doodle.d6 { left: 34%; top: 60%; width: 28px; animation: bob 3.4s ease-in-out infinite .4s; }
+@keyframes bob     { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-10px) rotate(4deg); } }
+@keyframes floaty  { 0%,100% { transform: translateY(0) rotate(6deg); }  50% { transform: translateY(-14px) rotate(-2deg); } }
+@keyframes spinSlow{ from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@keyframes twinkle2{ 0%,100% { opacity: .25; transform: scale(.7); } 50% { opacity: 1; transform: scale(1.15); } }
+
+/* 제목 아래 꼬불 밑줄 */
+.home-hero h1 { display: inline-block; }
+.home-hero h1::after {
+  content: ''; display: block; height: 14px; width: 62%; margin: 8px auto 0;
+  background: url('../assets/deco/squiggle.svg') center/contain no-repeat;
+}
+
+/* 버튼 팝(스프링) — hover 시 통통 */
+.btn { transition: transform .16s cubic-bezier(.34,1.7,.5,1), box-shadow .12s, background .12s, border-color .12s, color .12s; }
+.btn:hover { transform: translateY(-2px) scale(1.04); }
+.btn:active { transform: translateY(2px) scale(.97); }
+.btn.primary:hover { animation: wiggle .4s ease; }
+@keyframes wiggle { 0%,100% { rotate: 0deg; } 25% { rotate: -2.5deg; } 75% { rotate: 2.5deg; } }
+
+/* 보기/카드 팝 */
+.opt-btn { transition: transform .16s cubic-bezier(.34,1.7,.5,1), box-shadow .12s, border-color .12s; }
+.opt-btn:hover { transform: translateY(-3px) scale(1.05) rotate(-1deg); border-color: var(--brand); }
+.grade-card, .home-card { transition: transform .18s cubic-bezier(.34,1.6,.5,1), box-shadow .18s, border-color .15s; }
+.grade-card:hover { transform: translateY(-6px) scale(1.03) rotate(-1deg); }
+
+/* 네비 활성 시 통 튀기 */
+.nav-btn { transition: transform .18s cubic-bezier(.34,1.7,.5,1), background .15s, border-color .15s, color .15s; }
+.nav-btn.active { transform: scale(1.06); }
+
+/* 학년 배지·홈 배지 살짝 기울여 장난스럽게 */
+.grade-badge, .home-card .badge { transform: rotate(-5deg); transition: transform .18s cubic-bezier(.34,1.7,.5,1); }
+.grade-card:hover .grade-badge { transform: rotate(5deg) scale(1.1); }
+
+/* 점·대시 시그니처도 통통 (홈 모티프) */
+.home-motif .m-dot, .home-motif .m-dash { animation: bob 3s ease-in-out infinite; }
+.home-motif .m-dash { animation-duration: 3.6s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .doodle, .home-motif .m-dot, .home-motif .m-dash { animation: none; }
+  .btn.primary:hover { animation: none; }
+}
