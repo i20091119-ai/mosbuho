@@ -20,6 +20,19 @@
   // 미션 상태
   let decodeOk = false, decodeTries = 0, replyTries = 0;
   let replyKey = null, replyText = '', replyComposer = null, replyAnswer = '';
+  let lastMathQ = '';   // 직전 출제 문제(연속 중복 회피)
+
+  // 수학 문제 선택: 배열이면 랜덤(직전과 다르게), 단일 객체면 그대로
+  function pickMath(m) {
+    if (!m) return null;
+    if (!Array.isArray(m)) return m;
+    if (!m.length) return null;
+    let pick, tries = 0;
+    do { pick = m[Math.floor(Math.random() * m.length)]; tries++; }
+    while (m.length > 1 && pick.q === lastMathQ && tries < 10);
+    lastMathQ = pick.q;
+    return pick;
+  }
   let hintOn = false;
 
   function $(id) { return document.getElementById(id); }
@@ -220,9 +233,9 @@
   function openReply() {
     const rc = $('replyCard'); rc.style.display = '';
     $('replyPrompt').textContent = data.reply.prompt;
-    // 응답 정답 = 앞글자(base) + 수학 문제의 답(math.a). 정답 모스는 보여주지 않음.
+    // 응답 정답 = 앞글자(base) + 수학 문제의 답. 정답 모스는 보여주지 않음.
     const base = data.reply.base || '';
-    const math = data.reply.math;
+    const math = pickMath(data.reply.math);   // 배열이면 랜덤 출제
     replyAnswer = math ? base + math.a : (data.reply.answer || '');
     if (math) {
       $('replyTarget').innerHTML =
