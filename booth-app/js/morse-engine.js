@@ -44,7 +44,8 @@
     '--.': 'ㅅ', '-.-': 'ㅇ', '.--.': 'ㅈ', '-.-.': 'ㅊ', '-..-': 'ㅋ', '--..': 'ㅌ',
     '---': 'ㅍ', '.---': 'ㅎ',
     '.': 'ㅏ', '..': 'ㅑ', '-': 'ㅓ', '...': 'ㅕ', '.-': 'ㅗ', '-.': 'ㅛ',
-    '....': 'ㅜ', '.-.': 'ㅠ', '-..': 'ㅡ', '..-': 'ㅣ'
+    '....': 'ㅜ', '.-.': 'ㅠ', '-..': 'ㅡ', '..-': 'ㅣ',
+    '.-.-': 'ㅐ', '-.--': 'ㅔ'
   };
 
   // 역방향 테이블 (문자 → 모스)
@@ -76,7 +77,7 @@
 
   // ── 2. 한글 조합 엔진 (FSM, 유니코드 음절 조합) ─────────────────────────────
   const CONSONANTS = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
-  const VOWELS = ['ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ'];
+  const VOWELS = ['ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ', 'ㅐ', 'ㅔ'];
   const CHO_S = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
   const JUNG_S = 'ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ';
   const JONG_S = ['\0', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ',
@@ -93,8 +94,17 @@
     return String.fromCharCode(0xAC00 + (ci * 21 + ji) * 28 + ki);
   }
 
+  // 합성(복합) 모음 조합표 — 표준 모스엔 기본 10모음만 있으므로 ㅐ·ㅔ 등은 조합으로 입력.
+  //   ㅐ=ㅏ+ㅣ, ㅔ=ㅓ+ㅣ, ㅒ=ㅑ+ㅣ, ㅖ=ㅕ+ㅣ, ㅘ=ㅗ+ㅏ, ㅚ=ㅗ+ㅣ, ㅝ=ㅜ+ㅓ, ㅟ=ㅜ+ㅣ, ㅢ=ㅡ+ㅣ …
+  const JUNG_COMBINE = {
+    'ㅏ': { 'ㅣ': 'ㅐ' }, 'ㅑ': { 'ㅣ': 'ㅒ' }, 'ㅓ': { 'ㅣ': 'ㅔ' }, 'ㅕ': { 'ㅣ': 'ㅖ' },
+    'ㅗ': { 'ㅏ': 'ㅘ', 'ㅣ': 'ㅚ' }, 'ㅘ': { 'ㅣ': 'ㅙ' },
+    'ㅜ': { 'ㅓ': 'ㅝ', 'ㅣ': 'ㅟ' }, 'ㅝ': { 'ㅣ': 'ㅞ' },
+    'ㅡ': { 'ㅣ': 'ㅢ' }
+  };
+
   // 자모 입력을 음절로 누적 조합하는 상태기계.
-  // (morse_trainer_v3_mobile_hangul.html 의 HangulComposer 를 그대로 보존·이식)
+  // (morse_trainer_v3_mobile_hangul.html 의 HangulComposer 를 이식 + 합성모음 조합 추가)
   class HangulComposer {
     constructor() { this.reset(); }
     reset() { this.state = 'EMPTY'; this.cho = null; this.jung = null; this.jong = null; this.committed = ''; }
@@ -112,7 +122,11 @@
           break;
         case 'JUNG':
           if (isC) { this.jong = jamo; this.state = 'JONG'; }
-          else if (isV) { nc = composeSyllable(this.cho, this.jung, null); this.cho = null; this.jung = null; nc += jamo; this.state = 'EMPTY'; }
+          else if (isV) {
+            const comb = JUNG_COMBINE[this.jung] && JUNG_COMBINE[this.jung][jamo];
+            if (comb) { this.jung = comb; }   // 합성 모음(ㅏ+ㅣ=ㅐ 등) — 같은 음절 유지
+            else { nc = composeSyllable(this.cho, this.jung, null); this.cho = null; this.jung = null; nc += jamo; this.state = 'EMPTY'; }
+          }
           break;
         case 'JONG':
           if (isV) { nc = composeSyllable(this.cho, this.jung, null); this.cho = this.jong; this.jung = jamo; this.jong = null; this.state = 'JUNG'; }
@@ -145,7 +159,8 @@
     'ㄲ': 'ㄱㄱ', 'ㄸ': 'ㄷㄷ', 'ㅃ': 'ㅂㅂ', 'ㅆ': 'ㅅㅅ', 'ㅉ': 'ㅈㅈ',
     'ㄳ': 'ㄱㅅ', 'ㄵ': 'ㄴㅈ', 'ㄶ': 'ㄴㅎ', 'ㄺ': 'ㄹㄱ', 'ㄻ': 'ㄹㅁ',
     'ㄼ': 'ㄹㅂ', 'ㄽ': 'ㄹㅅ', 'ㄾ': 'ㄹㅌ', 'ㄿ': 'ㄹㅍ', 'ㅀ': 'ㄹㅎ', 'ㅄ': 'ㅂㅅ',
-    'ㅐ': 'ㅏㅣ', 'ㅒ': 'ㅑㅣ', 'ㅔ': 'ㅓㅣ', 'ㅖ': 'ㅕㅣ', 'ㅘ': 'ㅗㅏ',
+    // ㅐ·ㅔ 는 전용 모스 코드가 있으므로 분해하지 않음(.-.- / -.--)
+    'ㅒ': 'ㅑㅣ', 'ㅖ': 'ㅕㅣ', 'ㅘ': 'ㅗㅏ',
     'ㅙ': 'ㅗㅏㅣ', 'ㅚ': 'ㅗㅣ', 'ㅝ': 'ㅜㅓ', 'ㅞ': 'ㅜㅓㅣ', 'ㅟ': 'ㅜㅣ'
   };
   function expandJamo(j) { return COMPOUND[j] ? COMPOUND[j].split('') : [j]; }
