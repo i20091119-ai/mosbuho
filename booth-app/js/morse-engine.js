@@ -56,14 +56,19 @@
   }
   const REV_EN = buildRev(EN), REV_KO = buildRev(KO),
         REV_NUM = buildRev(NUM), REV_SYM = buildRev(SYM);
+  // 영문+숫자 통합 모드 (모스 코드가 겹치지 않아 안전하게 합칠 수 있음)
+  const ALNUM = Object.assign({}, EN, NUM);
+  const REV_ALNUM = Object.assign({}, REV_EN, REV_NUM);
 
   // 모드별 접근자
-  const MODES = ['en', 'ko', 'num', 'sym'];
+  const MODES = ['en', 'ko', 'num', 'sym', 'alnum'];
   function getTable(mode) {
-    return mode === 'en' ? EN : mode === 'ko' ? KO : mode === 'num' ? NUM : SYM;
+    return mode === 'en' ? EN : mode === 'ko' ? KO : mode === 'num' ? NUM
+         : mode === 'alnum' ? ALNUM : SYM;
   }
   function getRev(mode) {
-    return mode === 'en' ? REV_EN : mode === 'ko' ? REV_KO : mode === 'num' ? REV_NUM : REV_SYM;
+    return mode === 'en' ? REV_EN : mode === 'ko' ? REV_KO : mode === 'num' ? REV_NUM
+         : mode === 'alnum' ? REV_ALNUM : REV_SYM;
   }
   // 부스 카메라 단계는 영/한 혼합이 없으므로 모드별 디코딩을 쓴다.
   // 모드 불명 시 영문→숫자→기호 순으로 시도하는 통합 디코더.

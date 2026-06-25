@@ -83,8 +83,8 @@ try {
   click([...document.querySelectorAll('.grade-card')].find(c => c.dataset.grade === 'm'));
   click($('storyNext')); click($('storyNext'));
   check('m 해독 객관식 보기', document.querySelectorAll('.opt-btn').length >= 2);
-  click([...document.querySelectorAll('.opt-btn')].find(b => b.dataset.opt === '산소'));
-  check('m 한글 객관식 정답', $('replyCard').style.display !== 'none');
+  click([...document.querySelectorAll('.opt-btn')].find(b => b.dataset.opt === 'B7'));
+  check('m 영문+숫자 객관식 정답', $('replyCard').style.display !== 'none');
 
   // 확정 → 팔찌 → 아두이노 → 마무리, 통계 기록
   window.Booth.confirmMessage('SOS', 'en', 'telegraph');
