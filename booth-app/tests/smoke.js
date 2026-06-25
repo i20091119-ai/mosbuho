@@ -64,7 +64,7 @@ try {
   click([...document.querySelectorAll('.opt-btn')].find(b => b.dataset.opt === '1'));
   check('해독 정답→응답카드', $('replyCard').style.display !== 'none');
   check('응답 키 위젯 생성', $('replyKeyHost').querySelector('.mk-key') !== null);
-  check('응답 타깃 정답 3 표시', $('replyTarget').innerHTML.includes('3'));
+  check('응답에 수학 문제 표시', $('replyTarget').innerHTML.includes('math-q'));
   click($('replyCheck'));
   check('관용도(k) 도움 버튼', $('replyHelp') !== null);
   if ($('replyHelp')) click($('replyHelp'));

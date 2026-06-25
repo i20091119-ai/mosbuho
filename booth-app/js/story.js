@@ -19,7 +19,7 @@
 
   // 미션 상태
   let decodeOk = false, decodeTries = 0, replyTries = 0;
-  let replyKey = null, replyText = '', replyComposer = null;
+  let replyKey = null, replyText = '', replyComposer = null, replyAnswer = '';
   let hintOn = false;
 
   function $(id) { return document.getElementById(id); }
@@ -220,8 +220,18 @@
   function openReply() {
     const rc = $('replyCard'); rc.style.display = '';
     $('replyPrompt').textContent = data.reply.prompt;
-    // 정답 모스는 보여주지 않음 — 학생이 실물 모스부호표에서 직접 찾아 보내도록.
-    $('replyTarget').innerHTML = `보낼 말: <b>${data.reply.answer}</b> <span class="mut">— 테이블의 실물 모스부호표에서 찾아 전신키로 보내요!</span>`;
+    // 응답 정답 = 앞글자(base) + 수학 문제의 답(math.a). 정답 모스는 보여주지 않음.
+    const base = data.reply.base || '';
+    const math = data.reply.math;
+    replyAnswer = math ? base + math.a : (data.reply.answer || '');
+    if (math) {
+      $('replyTarget').innerHTML =
+        `보낼 신호: <b>${base || '(숫자)'}</b> + <b>수학 문제의 답</b>
+         <div class="math-q">${math.q}</div>
+         <span class="mut">답을 ${base ? '“' + base + '” 뒤에 붙여 ' : ''}전신키로 보내요! (모스부호는 실물 표에서 찾기)</span>`;
+    } else {
+      $('replyTarget').innerHTML = `보낼 말: <b>${replyAnswer}</b> <span class="mut">— 실물 모스부호표에서 찾아 전신키로 보내요!</span>`;
+    }
     replyText = ''; replyComposer = new M.HangulComposer(); replyTries = 0;
     $('replyDecodedText').textContent = '—';
     if (replyKey) replyKey.destroy();
@@ -245,12 +255,12 @@
 
   function checkReply() {
     if (data.mode === 'ko') { replyComposer.flush(); replyText = replyComposer.getFullText(); }
-    const ok = norm(replyText) === norm(data.reply.answer);
+    const ok = norm(replyText) === norm(replyAnswer);
     const fb = $('replyFb');
     if (ok) {
       fb.className = 'mission-feedback ok'; fb.textContent = data.reply.npc;
       // 통계 기록(개인정보 없이)
-      if (global.Stats) global.Stats.record({ text: data.reply.answer, mode: data.mode, source: 'mission', ts: Date.now() });
+      if (global.Stats) global.Stats.record({ text: replyAnswer, mode: data.mode, source: 'mission', ts: Date.now() });
       setTimeout(showSuccessStory, 900);
     } else {
       replyTries++;
