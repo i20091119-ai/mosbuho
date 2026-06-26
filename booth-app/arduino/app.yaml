@@ -1,0 +1,10 @@
+name: Morse Booth Bridge
+description: "경남수학문화관 우주통신사 부스 — 아케이드 버튼·부저·LED 모스 브리지 (Python MPU ↔ STM32 MCU). 웹앱이 localhost:8080 으로 연동."
+icon: 📡
+version: "1.0.0"
+
+# 외부로 노출할 포트는 없음(브라우저가 같은 보드의 localhost:8080 로 접속).
+ports: []
+
+# 사전 제작 Brick 미사용 (직접 HTTP 서버 + Bridge RPC).
+bricks: []
