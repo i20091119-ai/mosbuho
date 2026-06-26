@@ -19,7 +19,7 @@
 
   // 미션 상태
   let decodeOk = false, decodeTries = 0, replyTries = 0;
-  let replyKey = null, replyText = '', replyComposer = null, replyAnswer = '';
+  let replyKey = null, replyText = '', replyComposer = null, replyAnswer = '', replyMathA = '';
   let lastMathQ = '';   // 직전 출제 문제(연속 중복 회피)
 
   // 수학 문제 선택: 배열이면 랜덤(직전과 다르게), 단일 객체면 그대로
@@ -237,11 +237,12 @@
     const base = data.reply.base || '';
     const math = pickMath(data.reply.math);   // 배열이면 랜덤 출제
     replyAnswer = math ? base + math.a : (data.reply.answer || '');
+    replyMathA = math ? math.a : '';          // 숫자만(앞글자 없이)도 정답 인정
     if (math) {
       $('replyTarget').innerHTML =
         `보낼 신호: <b>${base || '(숫자)'}</b> + <b>수학 문제의 답</b>
          <div class="math-q">${math.q}</div>
-         <span class="mut">답을 ${base ? '“' + base + '” 뒤에 붙여 ' : ''}전신키로 보내요! (모스부호는 실물 표에서 찾기)</span>`;
+         <span class="mut">문제의 답(숫자)을 전신키로 보내요!${base ? ` “${base}”를 앞에 붙이면 더 멋져요.` : ''} (모스부호는 실물 표에서 찾기)</span>`;
     } else {
       $('replyTarget').innerHTML = `보낼 말: <b>${replyAnswer}</b> <span class="mut">— 실물 모스부호표에서 찾아 전신키로 보내요!</span>`;
     }
@@ -268,7 +269,9 @@
 
   function checkReply() {
     if (data.mode === 'ko') { replyComposer.flush(); replyText = replyComposer.getFullText(); }
-    const ok = norm(replyText) === norm(replyAnswer);
+    // 너그러운 판정: 전체(OK18) 또는 숫자만(18) 둘 다 정답 인정
+    const got = norm(replyText);
+    const ok = got === norm(replyAnswer) || (replyMathA && got === norm(replyMathA));
     const fb = $('replyFb');
     if (ok) {
       fb.className = 'mission-feedback ok'; fb.textContent = data.reply.npc;
