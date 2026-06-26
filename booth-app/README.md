@@ -21,6 +21,16 @@ UNO Q는 최종 배포 대상일 뿐, **개발·수정은 PC 브라우저에서*
 - **폰/원격 테스트(선택)**: `.github/workflows/pages.yml` 로 GitHub Pages 자동 배포.
   저장소 **Settings → Pages → Source = "GitHub Actions"** 1회 설정 후 push 하면 테스트 URL 발행
   (HTTPS라 카메라도 동작). 부스 본운영은 그대로 UNO Q 오프라인.
+
+## UNO Q 새 장비에 올리기 (4대 동일 적용)
+
+새 우노 1대당 3줄이면 끝 — 한글폰트 설치·앱 받기·키오스크 자동실행까지 자동화:
+```bash
+git clone -b claude/focused-tesla-cpbbqo https://github.com/i20091119-ai/mosbuho.git ~/mosbuho
+bash ~/mosbuho/booth-app/deploy/setup-unoq.sh     # 폰트 설치 + 앱 갱신 (1회)
+bash ~/mosbuho/booth-app/deploy/start-booth.sh    # 키오스크 실행
+```
+자세한 내용·자동시작 등록·문제해결은 **`booth-app/deploy/README.md`** 참고.
 - **단일 정적 웹앱** — UNO Q의 Linux(Chromium)에서 **로컬 구동**
 - **완전 오프라인 · 외부 요청 0** — 폰트·차트·로직 전부 로컬. 인터넷 없이 동작
   (외부 CDN/원격 라이브러리 의존 없음)

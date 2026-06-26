@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# ============================================================================
+# start-booth.sh — 정적 서버 + 크롬 키오스크로 부스앱 띄우기
+# ----------------------------------------------------------------------------
+#  - http://localhost:8000 로 booth-app 을 서빙 (이미 떠 있으면 재사용)
+#  - 크롬을 전체화면 키오스크로 실행 (URL바·탭 없음)
+#  - 카메라(getUserMedia)는 localhost 라 보안컨텍스트 OK
+#
+# 종료(부스 운영 중 빠져나오기): 키보드 연결 후 Alt+F4,
+#   또는 Ctrl+Alt+F2 로 콘솔 전환 → `pkill chromium`
+# ============================================================================
+set -u
+
+# booth-app 디렉터리 = 이 스크립트(.../deploy)의 부모
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PORT="${PORT:-8000}"
+URL="http://localhost:${PORT}/index.html"
+
+# 1) 한글 폰트 점검 (없으면 경고만)
+if command -v fc-list >/dev/null && ! fc-list | grep -qiE "noto.*cjk|nanum|noto sans kr"; then
+  echo "⚠ 한글 시스템 폰트가 없어 보입니다. 먼저 setup-unoq.sh 실행을 권장합니다."
+fi
+
+# 2) 정적 서버 (이미 응답하면 그대로 사용)
+if ! curl -s "http://localhost:${PORT}" >/dev/null 2>&1; then
+  echo "정적 서버 시작: $APP_DIR (포트 $PORT)"
+  ( cd "$APP_DIR" && exec python3 -m http.server "$PORT" ) >/tmp/booth-http.log 2>&1 &
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    curl -s "http://localhost:${PORT}" >/dev/null 2>&1 && break
+    sleep 0.5
+  done
+else
+  echo "이미 떠 있는 서버(포트 $PORT) 재사용"
+fi
+
+# 3) 크롬 찾기
+CHROME="$(command -v chromium || command -v chromium-browser || command -v google-chrome || true)"
+if [ -z "$CHROME" ]; then
+  echo "✗ 크롬(chromium)을 찾을 수 없습니다. setup-unoq.sh 로 설치하세요." >&2
+  exit 1
+fi
+
+# 4) 키오스크 실행
+#   - 전용 프로필: 카메라 권한 등 설정 유지
+#   - use-fake-ui-for-media-stream: 카메라 권한 팝업 없이 자동 허용
+#   - autoplay-policy: 부저 소리(WebAudio) 제스처 없이 재생 허용
+exec "$CHROME" \
+  --user-data-dir="$HOME/.config/booth-chromium" \
+  --kiosk "$URL" \
+  --start-fullscreen \
+  --autoplay-policy=no-user-gesture-required \
+  --use-fake-ui-for-media-stream \
+  --overscroll-history-navigation=0 \
+  --disable-pinch \
+  --disable-session-crashed-bubble \
+  --disable-infobars \
+  --no-first-run \
+  --noerrdialogs
