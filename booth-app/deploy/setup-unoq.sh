@@ -7,7 +7,8 @@
 #   2) 부스앱 저장소 내려받기/갱신
 #   3) 자동 로그인 설정 (부팅 시 로그인 화면 건너뜀)
 #   4) 부팅 자동시작 등록 (부스앱 키오스크 + 브리지)
-#   5) 완료 — 재부팅하면 전원만 켜도 부스앱이 풀스크린으로 뜸
+#   5) 화면 자동 재인식 서비스 (HDMI 재꽂기 자동화 — "신호 없음" 방지)
+#   6) 완료 — 재부팅하면 전원만 켜도 부스앱이 풀스크린으로 뜸
 #
 # 사용법 (새 우노에서, 이 두 줄이면 끝):
 #   git clone -b claude/focused-tesla-cpbbqo https://github.com/i20091119-ai/mosbuho.git ~/mosbuho
@@ -59,7 +60,7 @@ else
   warn "enable-autologin.sh 없음 — git 갱신 확인"
 fi
 
-say "[4/5] 부팅 자동시작 등록 (부스앱 키오스크)"
+say "[4/6] 부팅 자동시작 등록 (부스앱 키오스크)"
 if [ "${NO_AUTOSTART:-0}" = "1" ]; then
   echo "건너뜀 (NO_AUTOSTART=1)"
 elif [ -f "$DEPLOY/install-autostart.sh" ]; then
@@ -68,7 +69,16 @@ else
   warn "install-autostart.sh 없음 — git 갱신 확인"
 fi
 
-say "[5/5] 완료 — 재부팅하면 전원만 켜도 부스앱이 뜹니다"
+say "[5/6] 화면 자동 재인식 서비스 설치 (HDMI 재꽂기 자동화)"
+if [ "${NO_DISPLAYFIX:-0}" = "1" ]; then
+  echo "건너뜀 (NO_DISPLAYFIX=1)"
+elif [ -f "$DEPLOY/install-display-service.sh" ]; then
+  bash "$DEPLOY/install-display-service.sh" || warn "화면 서비스 설치 실패 — 수동 확인"
+else
+  warn "install-display-service.sh 없음 — git 갱신 확인"
+fi
+
+say "[6/6] 완료 — 재부팅하면 전원만 켜도 부스앱이 뜹니다"
 echo "지금 바로 보려면 :  bash $DEPLOY/start-booth.sh"
 echo "또는 재부팅      :  전원으로 콜드 부팅(모니터 먼저 켠 뒤). sudo reboot 는 화면 깜빡 이슈 있음."
 echo
