@@ -6,7 +6,8 @@
 
 ## 0. 준비물 체크
 - [ ] Arduino **UNO Q** 1
-- [ ] **USB‑C PD 멀티허브** (AVC009V2: HDMI + USB‑A×3 + USB‑C PD‑in + 3.5mm)
+- [ ] **USB‑C PD 멀티허브** (예: Belkin — HDMI + USB‑A×2 + USB‑C(PD 3.0) + 3.5mm, **호스트로 가는 케이블 일체형**)
+      · USB‑A가 2개라 **웹캠 + 터치**로 꽉 참(예비 없음). 마우스를 쓸 땐 터치 대신 그 자리에 꽂으면 됨. SD슬롯은 미사용.
 - [ ] 포터블 모니터 **프리즘 1530it** (mini‑HDMI, USB‑C×2, 10점 터치)
 - [ ] **USB‑C PD 충전기 30W+** (UNO Q 부팅용)
 - [ ] **USB‑C 충전기** (모니터 자체 전원용)
@@ -27,11 +28,11 @@
        [USB-C PD 충전기 30W+]   [USB-C 충전기]   [12V DC 어댑터]
                  │(PD)               │                 │ (+12V / GND)
                  ▼                   ▼                 │
-   UNO Q ──USB-C──►[ AVC009V2 허브 ]   1530it USB-C#1 ◄┘(모니터 자체 전원)
+   UNO Q ◄캡티브케이블─[ USB-C PD 허브 ]  1530it USB-C#1 ◄┘(모니터 자체 전원)
    (STM32 헤더)        │  HDMI ─►(HDMI→mini-HDMI)─► 1530it mini-HDMI   [영상]
      │  D2 ─► 부저(+)  │  USB-A①─► USB 웹캠                            [카메라]
-     │  GND─► 부저(-)  │  USB-A②─►(USB-A→USB-C)─► 1530it USB-C#2       [10점 터치]
-     │                 │  USB-A③─► (예비/마우스)
+     │  GND─► 부저(-)  │  USB-A②─►(USB-A→USB-C)─► 1530it USB-C#2       [10점 터치 또는 마우스]
+     │                 │  USB-C(PD 3.0) ◄── PD 충전기                  [UNO Q 전원]
      │                 └  3.5mm ─► 소형 스피커                         [소리]
      │  D3 ◄── 아케이드 버튼 마이크로스위치(NO),  COM ─► GND           [모스 누르기]
      │  D4 ─► ULN2003 IN1 ─(OUT1)─► 아케이드 버튼 LED(-),  LED(+)─►+12V [버튼 불빛]
@@ -44,8 +45,8 @@
 ## 1단계 · 디스플레이 + 웹캠 + 앱 (전자회로 없이)
 > 먼저 "컴퓨터"만 띄워 앱 전체를 시뮬레이션으로 확인.
 
-1. **허브를 UNO Q USB‑C** 에 연결 (허브의 호스트 포트/케이블).
-2. **PD 충전기 → 허브의 USB‑C(PD‑in)** 포트. (※ 이게 없으면 UNO Q **부팅 안 됨**)
+1. 허브의 **호스트 케이블(일체형 USB‑C)** 을 **UNO Q USB‑C** 에 연결.
+2. **PD 충전기 → 허브의 USB‑C(PD 3.0)** 포트. (※ 이게 없으면 UNO Q **부팅 안 됨**)
 3. **허브 HDMI → (HDMI→mini‑HDMI) → 1530it mini‑HDMI**.
 4. **모니터 USB‑C#1 → USB‑C 충전기** (모니터 자체 전원 ON).
 5. **모니터 USB‑C#2 → (USB‑C→USB‑A) → 허브 USB‑A** (터치).
