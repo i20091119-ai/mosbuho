@@ -42,13 +42,15 @@
   /* 로컬 폰트 스택 — 외부 요청 없음. 설치돼 있으면 Pretendard/Noto 사용,
      아니면 Debian(UNO Q) 기본 한글 폰트(Noto Sans CJK)나 시스템 sans 로 폴백 */
   --font-ko: 'Pretendard', 'Noto Sans KR', 'Noto Sans CJK KR', 'Apple SD Gothic Neo',
-             -apple-system, 'Malgun Gothic', sans-serif;
+             -apple-system, 'Malgun Gothic', 'Jua', sans-serif;
   --font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'DejaVu Sans Mono', ui-monospace, 'Menlo', monospace;
 }
 
 /* ── 로컬 번들 폰트 (SIL OFL 1.1) — scripts/fetch-assets.sh 로 받아 assets/fonts/ 에 포함 ── */
 @font-face { font-family:'Pretendard'; font-weight:400 800; font-display:swap;
-  src:url('../assets/fonts/PretendardVariable.woff2') format('woff2-variations'); }
+  /* format('woff2') 사용 — 'woff2-variations' 힌트는 구버전 Chromium(UNO Q Debian)이
+     거부해 폰트를 통째로 건너뛰는 문제가 있음. 가변 woff2 는 plain woff2 로도 정상 로드됨. */
+  src:url('../assets/fonts/PretendardVariable.woff2') format('woff2'); }
 @font-face { font-family:'IBM Plex Mono'; font-weight:400; font-display:swap;
   src:url('../assets/fonts/IBMPlexMono-Regular.woff2') format('woff2'); }
 @font-face { font-family:'IBM Plex Mono'; font-weight:600; font-display:swap;
