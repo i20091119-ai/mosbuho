@@ -237,12 +237,18 @@
     const base = data.reply.base || '';
     const math = pickMath(data.reply.math);   // 배열이면 랜덤 출제
     replyAnswer = math ? base + math.a : (data.reply.answer || '');
-    replyMathA = math ? math.a : '';          // 숫자만(앞글자 없이)도 정답 인정
+    replyMathA = math ? math.a : '';
     if (math) {
+      const formula = base
+        ? `<span class="reply-base">${base}</span><span class="reply-plus">+</span><span class="reply-num">답(숫자)</span>`
+        : `<span class="reply-num">답(숫자)</span>`;
       $('replyTarget').innerHTML =
-        `보낼 신호: <b>${base || '(숫자)'}</b> + <b>수학 문제의 답</b>
+        `<div class="reply-formula">보낼 신호 &nbsp;${formula}</div>
          <div class="math-q">${math.q}</div>
-         <span class="mut">문제의 답(숫자)을 전신키로 보내요!${base ? ` “${base}”를 앞에 붙이면 더 멋져요.` : ''} (모스부호는 실물 표에서 찾기)</span>`;
+         ${base
+           ? `<div class="reply-warn">반드시 <span class="reply-base-x">${base}</span> 를 <u>먼저</u> 보내고, 그 뒤에 문제의 답(숫자)을 붙여요!<br>(예: <span class="reply-base-x">${base}</span> + 답)</div>`
+           : `<span class="mut">문제의 답(숫자)을 전신키로 보내요!</span>`}
+         <span class="mut">모스부호는 테이블의 실물 표에서 찾아요.</span>`;
     } else {
       $('replyTarget').innerHTML = `보낼 말: <b>${replyAnswer}</b> <span class="mut">— 실물 모스부호표에서 찾아 전신키로 보내요!</span>`;
     }
@@ -269,9 +275,10 @@
 
   function checkReply() {
     if (data.mode === 'ko') { replyComposer.flush(); replyText = replyComposer.getFullText(); }
-    // 너그러운 판정: 전체(OK18) 또는 숫자만(18) 둘 다 정답 인정
+    // 엄격 판정: 앞글자(OK/GO) + 수학 답을 모두 정확히 보내야 정답
     const got = norm(replyText);
-    const ok = got === norm(replyAnswer) || (replyMathA && got === norm(replyMathA));
+    const base = data.reply.base || '';
+    const ok = got === norm(replyAnswer);
     const fb = $('replyFb');
     if (ok) {
       fb.className = 'mission-feedback ok'; fb.textContent = data.reply.npc;
@@ -281,7 +288,12 @@
     } else {
       replyTries++;
       fb.className = 'mission-feedback bad';
-      fb.textContent = '신호가 조금 달라요. 실물 모스표를 보고 다시 보내볼까요?';
+      if (base && replyMathA && got === norm(replyMathA)) {
+        // 숫자(수학 답)는 맞췄지만 앞글자(OK/GO) 누락 → 콕 집어 안내
+        fb.innerHTML = `답 <b>${replyMathA}</b> 는 맞아요! 그런데 앞에 <b style="color:var(--c-red)">${base}</b> 를 꼭 붙여야 해요. <b style="color:var(--c-red)">${base}</b> + ${replyMathA} 로 다시 보내요!`;
+      } else {
+        fb.textContent = '신호가 조금 달라요. 실물 모스표를 보고 다시 보내볼까요?';
+      }
       if (replyTries >= maxTries()) {
         fb.innerHTML += ` <button class="btn sm purple" id="replyHelp">도움받아 성공</button>`;
         $('replyHelp').onclick = () => { fb.className = 'mission-feedback ok'; fb.textContent = data.reply.npc; setTimeout(showSuccessStory, 700); };
