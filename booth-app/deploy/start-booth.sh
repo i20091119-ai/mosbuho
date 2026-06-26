@@ -16,6 +16,27 @@ APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PORT="${PORT:-8000}"
 URL="http://localhost:${PORT}/index.html"
 
+# 0) 디스플레이 깨우기 — 부팅 시 USB-C→HDMI 영상 인식 타이밍 문제 보정
+#    (모니터가 늦게 준비돼 "신호 없음"으로 남는 경우, HDMI 재꽂기 대신 자동 재인식)
+kick_display() {
+  command -v xrandr >/dev/null 2>&1 || { echo "ℹ xrandr 없음 — 디스플레이 자동깨우기 건너뜀"; return 0; }
+  echo "디스플레이 인식 시도..."
+  local i outs o
+  for i in $(seq 1 15); do
+    outs="$(xrandr --query 2>/dev/null | awk '/ connected/{print $1}')"
+    if [ -n "$outs" ]; then
+      for o in $outs; do xrandr --output "$o" --auto 2>/dev/null || true; done
+      # 활성 모드(*)가 잡혔으면 성공
+      if xrandr --query 2>/dev/null | grep -q '\*'; then
+        echo "  ✓ 디스플레이 활성: $outs"; return 0
+      fi
+    fi
+    sleep 1   # 모니터가 늦게 준비될 수 있어 재질의(=커넥터 재탐지)하며 대기
+  done
+  echo "  ⚠ 자동 인식 실패 — 모니터 입력(mini-HDMI)·케이블 확인 필요"
+}
+kick_display
+
 # 1) 한글 폰트 점검 (없으면 경고만)
 if command -v fc-list >/dev/null && ! fc-list | grep -qiE "noto.*cjk|nanum|noto sans kr"; then
   echo "⚠ 한글 시스템 폰트가 없어 보입니다. 먼저 setup-unoq.sh 실행을 권장합니다."
