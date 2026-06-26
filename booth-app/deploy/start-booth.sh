@@ -42,16 +42,8 @@ if command -v fc-list >/dev/null && ! fc-list | grep -qiE "noto.*cjk|nanum|noto 
   echo "⚠ 한글 시스템 폰트가 없어 보입니다. 먼저 setup-unoq.sh 실행을 권장합니다."
 fi
 
-# 1.5) (best-effort) App Lab 브리지 앱 자동 시작 — 부저·아케이드 버튼용
-#   GUI 없이 CLI 로 백그라운드 구동. 명령/앱이 없으면 조용히 건너뜀(키오스크는 그대로 진행).
-BRIDGE_APP="$(ls -d "$HOME/ArduinoApps/morse-booth"* 2>/dev/null | sort | tail -1)"
-BRIDGE_CLI="$(command -v arduino-app-cli || command -v arduino-app || true)"
-if [ -n "$BRIDGE_APP" ] && [ -n "$BRIDGE_CLI" ]; then
-  echo "App Lab 브리지 시작 시도: $BRIDGE_APP"
-  "$BRIDGE_CLI" app start "$BRIDGE_APP" >/tmp/booth-bridge.log 2>&1 &
-else
-  echo "ℹ App Lab 브리지 자동시작 건너뜀(앱/CLI 없음). 버튼·부저는 App Lab GUI 에서 Run 하세요."
-fi
+# 1.5) 브리지(부저·버튼)는 App Lab 의 "Run as startup"(기본 앱) 설정으로 부팅 시 자동 실행됨.
+#   여기서 중복으로 띄우면 8080 포트 충돌(Failed)이 나므로 일부러 시작하지 않는다.
 
 # 2) 정적 서버 (이미 응답하면 그대로 사용)
 if ! curl -s "http://localhost:${PORT}" >/dev/null 2>&1; then

@@ -4,7 +4,7 @@
  * 기능
  *   (출력) play_morse(): 확정 메시지를 LED·부저로 표준 모스 타이밍 출력
  *   (입력) 아케이드 버튼(전신키): 누름/뗌을 Python 으로 전송 → 브라우저 전신키 구동
- *   (연출) 아케이드 버튼 LED: 누르는 동안 점등 + 신호 재생 때 메시지대로 점멸
+ *   (연출) 누르는 동안 부저·LED 실시간 ON(전신기 사운더) + 신호 재생 때 메시지대로 점멸
  *
  * 통신: Arduino_RouterBridge (RPC). Linux(Python) ↔ MCU.
  *   - Python → MCU : Bridge.provide("play_morse"/"ping")
@@ -83,7 +83,10 @@ void loop() {
     if (raw != btnLastRaw) { btnLastRaw = raw; btnLastChange = millis(); }
     if (millis() - btnLastChange > DEBOUNCE_MS && raw != btnStable) {
       btnStable = raw;
-      digitalWrite(BTN_LED_PIN, btnStable ? HIGH : LOW);  // 누르는 동안 점등
+      digitalWrite(BTN_LED_PIN, btnStable ? HIGH : LOW);  // 버튼 LED: 누르는 동안 점등
+      digitalWrite(LED_PIN,     btnStable ? HIGH : LOW);  // 내장 LED 도 눌림 표시
+      if (btnStable) tone(BUZZER_PIN, TONE_HZ);           // 누르는 동안 부저 삐—— (전신기 사운더)
+      else           noTone(BUZZER_PIN);
       Bridge.notify("key", btnStable ? 1 : 0);            // Linux(Python)로 통지
     }
   }
