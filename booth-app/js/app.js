@@ -90,18 +90,19 @@
       host.innerHTML = '<p style="color:var(--muted)">아직 확정한 배열이 없어요. ④전신키나 ⑤카메라에서 메시지를 확정하면 여기에 배열이 나타나요.</p>';
       return;
     }
-    // 모스를 좌→우 비즈 배열로 (점=빨강 짧은, 대시=파랑 긴). '/'와 공백은 구분 칸.
+    // 모스를 좌→우 비즈 배열로. 점=빨강(짧은), 대시=파랑(긴),
+    // 글자 끝=흰색 1개, 단어 끝=흰색 2개 (실물 팔찌엔 빈칸이 없으니 흰색 비즈로 구분).
     const beads = msg.morse.split('').map(c => {
       if (c === '.') return '<span class="bead-big red" title="점=빨강 짧은 비즈"></span>';
       if (c === '-') return '<span class="bead-big blue" title="대시=파랑 긴 비즈"></span>';
-      if (c === ' ') return '<span class="bead-sep"></span>';
-      if (c === '/') return '<span class="bead-sep wide"></span>';
+      if (c === ' ') return '<span class="bead-big white" title="글자 끝=흰색 비즈"></span>';
+      if (c === '/') return '<span class="bead-big white" title="단어 끝=흰색 2개"></span><span class="bead-big white"></span>';
       return '';
     }).join('');
     host.innerHTML = `
       <div class="bracelet-msg">내 메시지: <b>${escapeHtml(msg.text)}</b> <span class="mono" style="color:var(--muted)">(${M.morseToGlyphs(msg.morse.replace(/ /g,'  ').replace(/\//g,' / '))})</span></div>
       <div class="bracelet-string">${beads}</div>
-      <p style="color:var(--ink-soft);margin-top:12px">왼쪽부터 순서대로 끈에 꿰어요. <b class="dot-k">빨강(짧은)=점</b>, <b class="dash-k">파랑(긴)=대시</b>. 글자 사이는 칸을 띄워요.</p>`;
+      <p style="color:var(--ink-soft);margin-top:12px">왼쪽부터 순서대로 끈에 꿰어요. <b class="dot-k">빨강(짧은)=점</b>, <b class="dash-k">파랑(긴)=대시</b>, <b style="color:#5b6470">흰색=글자 끝</b>(단어 끝은 흰색 2개). <b>화면 순서 그대로 꿰면 돼요!</b></p>`;
   }
   function escapeHtml(s) { return (s || '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
 
