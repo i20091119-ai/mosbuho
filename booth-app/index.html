@@ -22,7 +22,7 @@
         <span class="s">경남 스페이스센터 · 우주통신사 미션</span>
       </div>
     </div>
-    <div class="header-cycle">점 <b style="color:var(--c-red)">●</b> 빨강·짧은 · 대시 <b style="color:var(--c-blue)">▬</b> 파랑·긴 · 흰색 = 글자 구분</div>
+    <div class="header-cycle">점 = 짧은 비즈 · 대시 = 긴 비즈 · 흰색 = 글자 구분 <span style="color:var(--muted)">(색은 자유)</span></div>
   </header>
 
   <!-- ════════ 단계 네비게이션 (가이드 흐름; 시차 운영 위해 자유 이동) ════════ -->
@@ -54,9 +54,10 @@
       <div class="card" style="margin-top:18px">
         <div class="card-title">준비물 안내</div>
         <div class="legend">
-          <span><span class="shapes"><span class="m-dot"></span></span> &nbsp;<span class="dot-k">짧은 빨강 비즈 = 점(·)</span></span>
-          <span><span class="shapes"><span class="m-dash"></span></span> &nbsp;<span class="dash-k">긴 파랑 비즈 = 대시(—)</span></span>
+          <span><span class="bead-big dot" style="width:16px;height:16px;vertical-align:middle"></span> &nbsp;<b>짧은 비즈 = 점(·)</b></span>
+          <span><span class="bead-big dash" style="width:40px;height:16px;vertical-align:middle"></span> &nbsp;<b>긴 비즈 = 대시(—)</b></span>
           <span><span class="bead-big white" style="width:14px;height:20px;vertical-align:middle"></span> &nbsp;흰색 비즈 = 글자 구분 (단어는 2개)</span>
+          <span style="color:var(--muted)">※ 색은 자유 — 길이로 구분해요</span>
           <span style="color:var(--muted)">모스부호표는 테이블의 <b>실물 코팅표</b>를 보세요.</span>
         </div>
       </div>
@@ -128,7 +129,7 @@
       <div class="cam-grid">
         <div>
           <div class="card">
-            <div class="card-title">웹캠 비즈 인식 — 트레이에 비즈를 좌→우로 놓으세요</div>
+            <div class="card-title">웹캠 비즈 인식 — 비즈를 <b>틈을 두고</b> 좌→우로 놓으세요 (짧은=점, 긴=대시, 흰색=글자 끝)</div>
             <div class="cam-stage" id="camStage">
               <video id="camVideo" autoplay playsinline muted></video>
               <canvas id="camOverlay" class="overlay"></canvas>
@@ -141,8 +142,8 @@
             </div>
             <div class="cam-controls">
               <button class="btn" id="camStop" disabled>정지</button>
-              <button class="btn purple" id="camCalibRed" disabled><img class="ic ic-color" src="assets/icons/bead-red.svg" alt="" onerror="this.style.display='none'">빨강 보정</button>
-              <button class="btn purple" id="camCalibBlue" disabled><img class="ic ic-color" src="assets/icons/bead-blue.svg" alt="" onerror="this.style.display='none'">파랑 보정</button>
+              <button class="btn purple" id="camCalibDot" disabled>짧은(점) 비즈 보정</button>
+              <button class="btn purple" id="camCalibDash" disabled>긴(대시) 비즈 보정</button>
               <button class="btn" id="camReset" disabled>인식 초기화</button>
               <button class="btn ok" id="camConfirm" disabled>이 배열로 확정 → 팔찌</button>
             </div>
@@ -163,8 +164,8 @@
             <div class="algo-steps" id="camAlgo"><span style="color:var(--muted);font-size:13px">비즈를 인식하면 한 단계씩 보여줘요</span></div>
           </div>
           <div class="card" style="margin-top:16px">
-            <div class="card-title">조명 보정 상태</div>
-            <div class="calib-state" id="camCalibState">기본값 사용 중 — 현재 조명에서 빨강/파랑을 한 번씩 보정하면 더 정확해요 (30초).</div>
+            <div class="card-title">길이 보정 상태</div>
+            <div class="calib-state" id="camCalibState">처음 한 번: ROI에 <b>짧은 비즈</b> 1개 두고 "짧은 보정", <b>긴 비즈</b> 1개 두고 "긴 보정" → 점/대시 길이 기준이 잡혀요. (고정 부스라 한 번이면 됨)</div>
             <div class="mode-tabs" style="margin-top:12px">
               <span class="calib-state">모드:</span>
               <button class="mode-tab active" data-cmode="en">영어</button>
