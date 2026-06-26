@@ -136,6 +136,12 @@ ULN2003 모듈(스텝모터 보드) 사용:
 
 ## 자주 막히는 곳
 - **안 켜짐** → 허브 PD‑in에 충전기 꽂혔는지(이게 전원).
+- **부팅 후 모니터 "No Signal"(보드 LED는 켜짐)** → UNO Q는 부팅 시 화면을 못 보면
+  영상을 안 내보냄(headless). **HDMI 케이블을 한 번 뽑았다 꽂으면**(hotplug) 영상이 켜짐.
+  - 매번 손으로 안 하려면 → `booth-app/deploy/install-display-service.sh` 설치
+    (부팅 때 커널이 자동으로 HDMI 재인식 = 재꽂기 대체). setup-unoq.sh 에 포함됨.
+  - ★ 검증된 연결: 모니터(전원+mini‑HDMI) · 허브(PD전원+HDMI out) ·
+    **모니터 USB‑C(터치) → 허브 USB‑A** 까지 다 꽂힌 상태에서 부팅. (터치선까지 꽂혀야 안정적)
 - **소리 HDMI로 감** → `pactl set-default-sink` 로 허브 오디오 지정.
 - **터치 안 됨** → 1530it가 "HDMI+USB 터치" 지원해야 함. 안 되면 마우스로(앱은 마우스 100% 동작).
 - **버튼 LED 안 켜짐** → GND 공통 안 묶임 / OUT1 핀 잘못 / 12V 전원 미연결.
