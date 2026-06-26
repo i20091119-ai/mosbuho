@@ -3,34 +3,31 @@
 우노 4대(+예비)에 **동일하게 적용**하기 위한 자동화 스크립트입니다.
 새 우노 1대당 아래 3줄이면 끝납니다.
 
-## 새 우노에 처음 올리기
+## 새 우노에 처음 올리기 — **두 줄이면 끝**
 
 리눅스 데스크톱이 뜬 상태에서 **터미널**을 열고:
 
 ```bash
-# 1) 앱 내려받기
 git clone -b claude/focused-tesla-cpbbqo https://github.com/i20091119-ai/mosbuho.git ~/mosbuho
-
-# 2) 셋업(한글폰트 설치 + 앱 갱신) — 비밀번호 물으면 우노 로그인 비번
 bash ~/mosbuho/booth-app/deploy/setup-unoq.sh
-
-# 3) 실행
-bash ~/mosbuho/booth-app/deploy/start-booth.sh
 ```
 
-- `setup-unoq.sh` = **한 번만**. 한글·이모지 폰트(`fonts-noto-cjk`) 설치 + 저장소 받기.
-  - 폰트가 깔리면 **네이버 등 모든 한글**이 제대로 나오고, 부스앱 폴백도 든든해집니다.
-  - 폰트 적용은 **크롬을 껐다 켜야** 반영됩니다.
-- `start-booth.sh` = 정적 서버(`localhost:8000`) + **크롬 전체화면 키오스크** 실행.
+`setup-unoq.sh` 하나가 **전부 자동**으로 합니다 (sudo 비번 1회 물음 = 우노 로그인 비번):
+1. 한글·이모지 폰트(`fonts-noto-cjk`) 설치 → 네이버 등 모든 한글 정상 + 부스앱 폴백
+2. 앱 저장소 받기/갱신
+3. **자동 로그인** 설정 (부팅 시 로그인 화면 건너뜀)
+4. **부팅 자동시작** 등록 (부스앱 키오스크 + 브리지)
 
-## 부팅하면 자동으로 뜨게 (부스 운영용)
+끝나면 **재부팅 → 전원만 켜도 부스앱이 풀스크린**으로 뜹니다. 터미널 만질 일 없음.
 
-```bash
-bash ~/mosbuho/booth-app/deploy/install-autostart.sh
-```
+> 일부만 빼고 싶을 때: `NO_AUTOLOGIN=1` / `NO_AUTOSTART=1` 환경변수로 끌 수 있음.
+> 예) `NO_AUTOLOGIN=1 bash ~/mosbuho/booth-app/deploy/setup-unoq.sh`
 
-다음 로그인부터 키오스크가 자동 실행됩니다.
-해제: `rm ~/.config/autostart/booth-kiosk.desktop`
+### 개별 스크립트 (필요할 때만)
+- `start-booth.sh` — 지금 바로 띄우기(정적서버 + 크롬 키오스크 + 브리지 시도)
+- `enable-autologin.sh` — 자동 로그인만 (해제: `sudo rm /etc/lightdm/lightdm.conf.d/50-booth-autologin.conf`)
+- `install-autostart.sh` — 부팅 자동시작만 (해제: `rm ~/.config/autostart/booth-kiosk.desktop`)
+- `update-applab.sh` — App Lab 브리지 앱을 git 최신코드로 갱신
 
 ## 앱만 최신으로 갱신할 때
 
