@@ -1,70 +1,59 @@
 #!/usr/bin/env python3
 # ============================================================================
-# main.py — Arduino UNO Q (Linux/MPU 측) 브리지 서버
+# main.py — Arduino UNO Q (Linux/MPU 측) 브리지 서버  · App Lab 정식 API 사용
 # ----------------------------------------------------------------------------
-# 브라우저 부스앱 ↔ 이 서버 ↔ STM32 스케치(RouterBridge)
+# 브라우저 부스앱 ↔ 이 서버(HTTP, localhost:8080) ↔ STM32 스케치(RouterBridge)
 #
-#   출력:  POST /play  {morse,unit}  → Bridge.call("play_morse")  → LED·부저
-#          GET  /status              → {"hw": bool}               (연결 확인)
-#   입력:  STM32 가 Bridge.notify("key",1|0) → 이 서버가 받아
-#          GET  /keys (SSE 스트림)으로 브라우저에 'down'/'up' 푸시 → 전신키 구동
+#   출력:  POST /play  {morse,unit} → Bridge.notify("play_morse",…) → LED·부저
+#          GET  /status            → {"hw": bool}   (MCU ping 결과)
+#   입력:  STM32 가 Bridge.notify("key",1|0) → 파이썬 "key" 핸들러 →
+#          GET  /keys (SSE)로 브라우저에 'down'/'up' 푸시 → 전신키 구동
 #
-# 표준 라이브러리만 사용(SSE 포함) → 부스 인터넷 없이 동작.
+# 핵심:
+#  - App Lab Python API 는 `from arduino.app_utils import *` (Bridge, App).
+#  - Bridge 호출은 전부 App.run 의 user_loop(메인 스레드)에서만 수행 →
+#    스레드 안전. HTTP 핸들러는 큐/플래그만 만진다.
+#  - 표준 라이브러리만으로 HTTP+SSE (부스 오프라인 동작).
 # ============================================================================
-import json, queue, threading
+import json, queue, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-# ── Bridge 연결 (App Lab Python 측 API; 버전 차이 방어적 로드) ──
-bridge = None
+# ── App Lab 런타임(보드에 사전 설치). 보드 밖(개발 PC)에선 없을 수 있어 방어적 로드 ──
 try:
-    from arduino.bridge import Bridge          # 경로는 App Lab 버전따라 다를 수 있음
-    bridge = Bridge()
-except Exception:
-    try:
-        from arduino_router import Bridge
-        bridge = Bridge()
-    except Exception:
-        bridge = None
+    from arduino.app_utils import *      # Bridge, App
+    HAVE_BRIDGE = True
+except Exception as e:
+    print("[GNMC] arduino.app_utils 로드 실패 → MCU 없이 HTTP만 동작:", e)
+    HAVE_BRIDGE = False
 
-# ── 버튼 이벤트 구독자(SSE 연결마다 큐 1개) ──
-_subs = set()
-_subs_lock = threading.Lock()
+PORT = 8080
+
+# ── 상태 공유 (HTTP 스레드 ↔ 메인 루프) ──────────────────────────────────────
+_subs = set(); _subs_lock = threading.Lock()   # SSE 구독자(연결마다 큐 1개)
+_play_q = queue.Queue()                          # 브라우저→MCU 재생 요청 큐
+_mcu_ok = {"v": False}                            # 메인 루프가 갱신하는 MCU 연결 플래그
 
 def _broadcast(evt: str):
     with _subs_lock:
-        dead = []
-        for q in _subs:
+        for q in list(_subs):
             try: q.put_nowait(evt)
-            except Exception: dead.append(q)
-        for q in dead: _subs.discard(q)
+            except Exception: _subs.discard(q)
 
+# STM32 의 Bridge.notify("key", state) 가 호출하는 파이썬 함수 (브리지 스레드 컨텍스트)
 def _on_key(state):
-    # STM32 가 Bridge.notify("key", 1|0) 로 호출 → 브라우저로 전달
     try: s = int(state)
     except Exception: s = 1 if state else 0
     _broadcast('down' if s else 'up')
 
-# STM32 의 "key" 통지를 받도록 Python 측에 핸들러 등록(가능하면)
-if bridge is not None:
-    for reg in ('provide', 'on', 'register'):
-        try:
-            getattr(bridge, reg)("key", _on_key); break
-        except Exception:
-            continue
-
-
-def mcu_available() -> bool:
-    if bridge is None: return False
-    try: return bool(bridge.call("ping"))
-    except Exception: return False
-
-def send_to_mcu(morse: str, unit: int) -> bool:
-    if bridge is None: return False
-    try: bridge.call("play_morse", morse, int(unit)); return True
+if HAVE_BRIDGE:
+    # 파이썬도 함수를 "제공"해야 MCU가 notify 로 호출할 수 있다(양방향 RPC)
+    try:
+        Bridge.provide("key", _on_key)
     except Exception as e:
-        print("[bridge] play_morse 실패:", e); return False
+        print("[GNMC] Bridge.provide('key') 실패:", e)
 
 
+# ── HTTP (브라우저 부스앱이 접속) ────────────────────────────────────────────
 class Handler(BaseHTTPRequestHandler):
     def _cors(self):
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -82,14 +71,13 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path.startswith("/status"):
-            self._json(200, {"hw": mcu_available()})
+            self._json(200, {"hw": _mcu_ok["v"]})
         elif self.path.startswith("/keys"):
             self._stream_keys()
         else:
             self._json(404, {"error": "not found"})
 
     def _stream_keys(self):
-        # Server-Sent Events: 버튼 down/up 를 브라우저로 실시간 푸시
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
@@ -103,7 +91,7 @@ class Handler(BaseHTTPRequestHandler):
                     evt = q.get(timeout=15)
                     self.wfile.write(f"data: {evt}\n\n".encode()); self.wfile.flush()
                 except queue.Empty:
-                    self.wfile.write(b": ping\n\n"); self.wfile.flush()  # keep-alive
+                    self.wfile.write(b": ping\n\n"); self.wfile.flush()   # keep-alive
         except Exception:
             pass
         finally:
@@ -115,17 +103,50 @@ class Handler(BaseHTTPRequestHandler):
         n = int(self.headers.get("Content-Length", 0))
         try: body = json.loads(self.rfile.read(n) or b"{}")
         except Exception: body = {}
-        ok = send_to_mcu(str(body.get("morse", "")), int(body.get("unit", 120)))
-        self._json(200, {"ok": ok})
+        # 직접 Bridge 호출하지 않고 큐에만 넣는다(스레드 안전) → 메인 루프가 전송
+        _play_q.put((str(body.get("morse", "")), int(body.get("unit", 120))))
+        self._json(200, {"ok": True})
 
     def log_message(self, *a):
         pass
 
 
-def main(host="0.0.0.0", port=8080):
-    print(f"[GNMC] 부스 브리지 시작 http://localhost:{port}  (MCU: {mcu_available()})")
-    ThreadingHTTPServer((host, port), Handler).serve_forever()
+def _serve_http():
+    print(f"[GNMC] 부스 브리지 HTTP 시작 http://localhost:{PORT}")
+    ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()
 
 
-if __name__ == "__main__":
-    main()
+# ── 메인 루프(App.run): 모든 Bridge 접근은 여기서만 ──────────────────────────
+_last_ping = {"t": 0.0}
+
+def loop():
+    # 1) 브라우저가 요청한 재생을 MCU로 전송 (notify = 응답 안 기다림, 재생 중 블로킹 회피)
+    try:
+        while True:
+            morse, unit = _play_q.get_nowait()
+            try: Bridge.notify("play_morse", morse, int(unit))
+            except Exception as e: print("[GNMC] play_morse 전송 실패:", e)
+    except queue.Empty:
+        pass
+    # 2) 2초마다 MCU 연결 확인(ping) → /status 플래그 갱신
+    now = time.time()
+    if now - _last_ping["t"] > 2.0:
+        _last_ping["t"] = now
+        try: _mcu_ok["v"] = bool(Bridge.call("ping"))
+        except Exception: _mcu_ok["v"] = False
+    time.sleep(0.02)
+
+
+# HTTP 서버는 데몬 스레드로(브라우저는 Bridge 연결 여부와 무관하게 접속 가능)
+threading.Thread(target=_serve_http, daemon=True).start()
+
+if HAVE_BRIDGE:
+    # App.run 이 브리지를 초기화/펌프하며 user_loop 를 반복 호출한다
+    try:
+        App.run(user_loop=loop)
+    except TypeError:
+        App.run(loop)            # 시그니처 차이 방어
+else:
+    # 보드 밖(개발 PC): Bridge 없이 HTTP만 유지
+    while True:
+        time.sleep(1)
