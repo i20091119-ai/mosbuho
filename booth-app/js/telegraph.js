@@ -47,6 +47,15 @@
     if (chOn && chWord && chWord[chIdx] === ch) { chIdx++; renderCh(); }
   }
   function onWord() {
+    // 한글은 타이머 기반 자동 띄어쓰기를 쓰지 않는다.
+    // (천천히 누르는 학생이 자모 사이에서 멈칫하면 음절이 쪼개지던 문제 방지 — 조합은 계속 유지)
+    // 한글에서 띄어쓰기는 'tgSpace' 버튼으로만 명시적으로 넣는다.
+    if (mode === 'ko') return;
+    decoded += ' ';
+    renderDecoded();
+  }
+  // 명시적 띄어쓰기(주로 한글 모드) — 조합 중인 음절을 확정하고 공백 추가
+  function addSpace() {
     if (mode === 'ko') { composer.flush(); composer.committed += ' '; decoded = composer.getFullText(); }
     else decoded += ' ';
     renderDecoded();
@@ -62,6 +71,7 @@
     mode = m;
     $('tgModeTabs').querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === m));
     if (key) key.setMode(m);
+    const sp = $('tgSpace'); if (sp) sp.style.display = (m === 'ko') ? '' : 'none';
     buildRef(); reset();
   }
 
@@ -108,6 +118,7 @@
       const t = e.target.closest('.mode-tab'); if (t) setMode(t.dataset.mode);
     });
     $('tgClear').onclick = reset;
+    const sp = $('tgSpace'); if (sp) sp.onclick = addSpace;
     $('tgChBtn').onclick = toggleCh;
     $('tgSound').onclick = () => {
       soundOn = !soundOn; key.setSound(soundOn);

@@ -87,6 +87,7 @@
             <div class="card-title">언어 선택</div>
             <div class="mode-tabs" id="tgModeTabs">
               <button class="mode-tab active" data-mode="en">영어 A–Z</button>
+              <button class="mode-tab" data-mode="ko">한글</button>
               <button class="mode-tab" data-mode="num">숫자 0–9</button>
               <button class="mode-tab" data-mode="sym">기호</button>
             </div>
@@ -96,7 +97,7 @@
             <div id="tgKeyHost"></div>
           </div>
           <div class="card" style="margin-top:16px">
-            <div class="card-title">해독된 메시지 <span style="display:flex;gap:8px"><button class="btn sm ok" id="tgSend"><img class="ic" src="assets/icons/play.svg" alt="" onerror="this.style.display='none'">신호로 보내기</button><button class="btn sm" id="tgClear">지우기</button></span></div>
+            <div class="card-title">해독된 메시지 <span style="display:flex;gap:8px"><button class="btn sm ok" id="tgSend"><img class="ic" src="assets/icons/play.svg" alt="" onerror="this.style.display='none'">신호로 보내기</button><button class="btn sm" id="tgSpace" style="display:none">띄어쓰기</button><button class="btn sm" id="tgClear">지우기</button></span></div>
             <div class="decoded" id="tgDecoded"><span class="ph">여기에 해독 결과가 나타나요</span></div>
           </div>
           <div class="card" style="margin-top:16px">
@@ -166,6 +167,7 @@
             <div class="mode-tabs" style="margin-top:12px">
               <span class="calib-state">모드:</span>
               <button class="mode-tab active" data-cmode="en">영어</button>
+              <button class="mode-tab" data-cmode="ko">한글</button>
               <button class="mode-tab" data-cmode="num">숫자</button>
             </div>
           </div>
