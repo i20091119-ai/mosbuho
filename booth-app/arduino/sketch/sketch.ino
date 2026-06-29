@@ -21,7 +21,11 @@ const int LED_PIN    = LED_BUILTIN; // 내장 상태 LED
 const int BUZZER_PIN = 2;           // 부저
 const int BUTTON_PIN = 3;           // 아케이드 버튼 스위치 (INPUT_PULLUP)
 const int BTN_LED_PIN = 4;          // 아케이드 버튼 LED
-const int TONE_HZ    = 680;         // 웹앱 전신음과 동일 음높이
+const int TONE_HZ    = 680;         // 웹앱 전신음과 동일 음높이(수동 부저용)
+// 부저 종류: 능동(active, 자체 발진=ON/OFF) 부저면 true, 수동(passive, tone 필요)이면 false
+const bool ACTIVE_BUZZER = false;
+void buzzOn()  { if (ACTIVE_BUZZER) digitalWrite(BUZZER_PIN, HIGH); else tone(BUZZER_PIN, TONE_HZ); }
+void buzzOff() { if (ACTIVE_BUZZER) digitalWrite(BUZZER_PIN, LOW);  else noTone(BUZZER_PIN); }
 
 volatile bool busy = false;         // 재생 중 재진입 방지
 
@@ -35,11 +39,11 @@ const unsigned long DEBOUNCE_MS = 15;
 void emit(unsigned long onMs) {
   digitalWrite(LED_PIN, HIGH);
   digitalWrite(BTN_LED_PIN, HIGH);
-  tone(BUZZER_PIN, TONE_HZ);
+  buzzOn();
   delay(onMs);
   digitalWrite(LED_PIN, LOW);
   digitalWrite(BTN_LED_PIN, LOW);
-  noTone(BUZZER_PIN);
+  buzzOff();
 }
 
 /* play_morse: 정규화 모스 문자열 출력.
@@ -85,8 +89,8 @@ void loop() {
       btnStable = raw;
       digitalWrite(BTN_LED_PIN, btnStable ? HIGH : LOW);  // 버튼 LED: 누르는 동안 점등
       digitalWrite(LED_PIN,     btnStable ? HIGH : LOW);  // 내장 LED 도 눌림 표시
-      if (btnStable) tone(BUZZER_PIN, TONE_HZ);           // 누르는 동안 부저 삐—— (전신기 사운더)
-      else           noTone(BUZZER_PIN);
+      if (btnStable) buzzOn();                            // 누르는 동안 부저 삐—— (전신기 사운더)
+      else           buzzOff();
       Bridge.notify("key", btnStable ? 1 : 0);            // Linux(Python)로 통지
     }
   }
