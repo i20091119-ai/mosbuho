@@ -78,7 +78,20 @@ else
   warn "install-display-service.sh 없음 — git 갱신 확인"
 fi
 
-say "[6/6] 완료 — 재부팅하면 전원만 켜도 부스앱이 뜹니다"
+say "[6/7] 절전 끄기 (가만 둬도 화면/전원이 안 꺼지게)"
+if [ "${NO_POWERFIX:-0}" = "1" ]; then
+  echo "건너뜀 (NO_POWERFIX=1)"
+else
+  # xset(화면 절전 해제)용 유틸 — start-booth.sh 가 매 부팅 때 xset 으로 DPMS 를 끈다
+  command -v xset >/dev/null 2>&1 || sudo apt-get install -y x11-xserver-utils || warn "x11-xserver-utils 설치 실패 — 화면 절전 해제(xset) 불가"
+  # 시스템 전체가 잠드는(suspend) 것 방지 — 부스는 종일 깨어 있어야 함
+  sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target 2>/dev/null \
+    && echo "  ✓ 시스템 절전(suspend/hibernate) 비활성" || warn "systemd 절전 마스킹 실패(권한?) — 수동 확인"
+  # 가상콘솔 화면 블랭크도 끄기(보조)
+  sudo bash -c 'echo 0 > /sys/module/kernel/parameters/consoleblank' 2>/dev/null || true
+fi
+
+say "[7/7] 완료 — 재부팅하면 전원만 켜도 부스앱이 뜹니다"
 echo "지금 바로 보려면 :  bash $DEPLOY/start-booth.sh"
 echo "또는 재부팅      :  전원으로 콜드 부팅(모니터 먼저 켠 뒤). sudo reboot 는 화면 깜빡 이슈 있음."
 echo

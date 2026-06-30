@@ -37,6 +37,22 @@ kick_display() {
 }
 kick_display
 
+# 0.5) 화면 절전·블랭크 끄기 — 부스는 종일 켜둠(가만 둬도 화면이 안 꺼지게).
+#   리눅스 기본값이 ~10분 무입력이면 화면을 끄는데(DPMS/스크린세이버), 터치/마우스
+#   입력이 없으면 발동하므로 X11 에서 명시적으로 해제한다.
+disable_blanking() {
+  export DISPLAY="${DISPLAY:-:0}"
+  if command -v xset >/dev/null 2>&1; then
+    xset s off 2>/dev/null || true        # 스크린세이버 끄기
+    xset s noblank 2>/dev/null || true    # 화면 블랭크 끄기
+    xset -dpms 2>/dev/null || true        # 모니터 절전(DPMS) 끄기
+    echo "  ✓ 화면 절전(DPMS/blank/스크린세이버) 해제 (DISPLAY=$DISPLAY)"
+  else
+    echo "  ℹ xset 없음 — 화면 절전 해제 건너뜀(설치: sudo apt install x11-xserver-utils)"
+  fi
+}
+disable_blanking
+
 # 1) 한글 폰트 점검 (없으면 경고만)
 if command -v fc-list >/dev/null && ! fc-list | grep -qiE "noto.*cjk|nanum|noto sans kr"; then
   echo "⚠ 한글 시스템 폰트가 없어 보입니다. 먼저 setup-unoq.sh 실행을 권장합니다."
