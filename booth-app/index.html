@@ -129,7 +129,7 @@
       <div class="cam-grid">
         <div>
           <div class="card">
-            <div class="card-title">웹캠 비즈 인식 — 비즈를 <b>틈을 두고</b> 좌→우로 놓으세요 (짧은=점, 긴=대시, 글자 구분은 <b>크게 띄우기</b>)</div>
+            <div class="card-title"><span>웹캠 비즈 인식 — <b>한 글자(또는 숫자 하나)</b>씩 카메라 밑에 놓으세요. 인식되면 <b>‘이 글자 추가’</b>를 눌러 팔찌에 꿰어요. (짧은=점, 긴=대시)</span></div>
             <div class="cam-stage" id="camStage">
               <video id="camVideo" autoplay playsinline muted></video>
               <canvas id="camOverlay" class="overlay"></canvas>
@@ -145,13 +145,23 @@
               <button class="btn purple" id="camCalibDot" disabled>짧은(점) 비즈 보정</button>
               <button class="btn purple" id="camCalibDash" disabled>긴(대시) 비즈 보정</button>
               <button class="btn" id="camReset" disabled>인식 초기화</button>
-              <button class="btn ok" id="camConfirm" disabled>이 배열로 확정 → 팔찌</button>
+              <button class="btn ok" id="camAdd" disabled>✓ 이 글자 추가 (팔찌에 꿰기)</button>
             </div>
           </div>
         </div>
         <div>
-          <div class="card">
-            <div class="card-title">실시간 해석</div>
+          <div class="card built-card">
+            <div class="card-title">내가 만든 메시지 — 한 글자씩 추가돼요</div>
+            <div class="built-text" id="camBuiltText"><span style="color:var(--muted);font-size:13px">아직 없음 — 첫 글자를 인식하고 ‘이 글자 추가’를 누르세요</span></div>
+            <div class="bracelet-string" id="camBuiltBeads"></div>
+            <div class="built-actions">
+              <button class="btn" id="camUndo" disabled>되돌리기(마지막 글자)</button>
+              <button class="btn" id="camClear" disabled>전체 지우기</button>
+              <button class="btn primary" id="camFinish" disabled>팔찌 완성 → 신호 확인</button>
+            </div>
+          </div>
+          <div class="card" style="margin-top:16px">
+            <div class="card-title">실시간 해석 (지금 보는 한 글자)</div>
             <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px">검출된 비즈 (좌→우)</div>
             <div class="bead-row" id="camBeads"><span style="color:var(--muted);font-size:13px">아직 없음</span></div>
             <div style="font-size:11px;color:var(--muted);font-weight:700;margin:12px 0 4px">모스</div>

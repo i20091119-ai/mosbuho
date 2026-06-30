@@ -33,6 +33,7 @@
   let lastResult = '';   // 마지막 표시 결과(안정화용)
   let stableCount = 0, pending = '';
   let confirmedText = '', confirmedMorse = '';
+  let built = [];        // 한 글자씩 누적: [{ text, morse }]  → 팔찌 만들기
 
   function $(id) { return document.getElementById(id); }
 
@@ -61,7 +62,7 @@
       await video.play();
       running = true;
       $('camMsg').style.display = 'none';
-      ['camStop', 'camCalibDot', 'camCalibDash', 'camReset', 'camConfirm'].forEach(id => { const e = $(id); if (e) e.disabled = false; });
+      ['camStop', 'camCalibDot', 'camCalibDash', 'camReset'].forEach(id => { const e = $(id); if (e) e.disabled = false; });
       loop();
     } catch (e) {
       $('camMsg').innerHTML = '<img class="ic-lg" src="assets/icons/camera-off.svg" alt="" onerror="this.style.display=\'none\'"><div>카메라를 열 수 없습니다.<br>권한을 허용했는지, UNO Q에 웹캠이 연결됐는지 확인하세요.</div>';
@@ -74,7 +75,7 @@
     $('camMsg').style.display = 'flex';
     $('camMsg').innerHTML = '<img class="ic-lg" src="assets/icons/camera.svg" alt="" onerror="this.style.display=\'none\'"><div>카메라가 꺼졌습니다</div><button class="btn primary" id="camStart">카메라 켜기</button>';
     $('camStart').onclick = start;
-    ['camStop', 'camCalibDot', 'camCalibDash', 'camReset', 'camConfirm'].forEach(id => { const e = $(id); if (e) e.disabled = true; });
+    ['camStop', 'camCalibDot', 'camCalibDash', 'camReset', 'camAdd'].forEach(id => { const e = $(id); if (e) e.disabled = true; });
   }
 
   // ── ROI 픽셀을 처리 캔버스로 가져오기 ──────────────────────────────────────
@@ -229,7 +230,7 @@
     else { beadsEl.innerHTML = res.beads.map(beadLabel).join(''); }
     $('camMorse').textContent = M.morseToGlyphs(res.morse.replace(/ /g, '  '));
     $('camText').textContent = res.text || '';
-    $('camConfirm').disabled = !res.text;
+    const add = $('camAdd'); if (add) add.disabled = !res.text;
     renderAlgo(res);
   }
 
@@ -273,6 +274,44 @@
     renderReadout({ beads: [], morse: '', text: '' });
   }
 
+  // ── 한 글자씩 누적해 팔찌 만들기 ───────────────────────────────────────────
+  // 흐름: ① 한 글자 비즈를 카메라에 → 인식 → ② '이 글자 추가' → 팔찌에 실물로 꿰기 → 반복
+  function addCurrent() {
+    if (!confirmedText) return;
+    built.push({ text: confirmedText, morse: confirmedMorse });
+    renderBuilt();
+    resetRecognition();        // 다음 글자를 놓을 수 있게 현재 인식 비움
+  }
+  function undoLast() { if (built.length) { built.pop(); renderBuilt(); } }
+  function clearBuilt() { built = []; renderBuilt(); }
+  function builtText() { return built.map(b => b.text).join(''); }
+  function builtMorse() { return built.map(b => b.morse).join(' '); }  // 글자 사이 = 모스 글자 간격
+
+  function renderBuilt() {
+    const textEl = $('camBuiltText'), beadsEl = $('camBuiltBeads');
+    const has = built.length > 0;
+    if (textEl) {
+      textEl.innerHTML = has
+        ? `<b>${escapeHtml(builtText())}</b> <span class="mono" style="color:var(--muted)">(${M.morseToGlyphs(builtMorse().replace(/ /g, '  '))})</span>`
+        : '<span style="color:var(--muted);font-size:13px">아직 없음 — 첫 글자를 인식하고 ‘이 글자 추가’를 누르세요</span>';
+    }
+    if (beadsEl) {
+      beadsEl.innerHTML = (has && global.Booth && global.Booth.morseToBeadsHTML)
+        ? global.Booth.morseToBeadsHTML(builtMorse()) : '';
+    }
+    const u = $('camUndo'), c = $('camClear'), f = $('camFinish');
+    if (u) u.disabled = !has; if (c) c.disabled = !has; if (f) f.disabled = !has;
+  }
+  function escapeHtml(s) { return (s || '').replace(/[&<>]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch])); }
+
+  function finishBracelet() {
+    const text = builtText();
+    if (!text) return;
+    built = [];                // 다음 손님을 위해 비움(확정 후 화면 전환)
+    renderBuilt();
+    global.Booth.confirmMessage(text, cmode, 'camera');
+  }
+
   // ── 초기화 ─────────────────────────────────────────────────────────────
   function init() {
     video = $('camVideo'); overlay = $('camOverlay'); octx = overlay.getContext('2d');
@@ -283,15 +322,17 @@
     const cd = $('camCalibDot'); if (cd) cd.onclick = () => calibrate('dot');
     const cda = $('camCalibDash'); if (cda) cda.onclick = () => calibrate('dash');
     $('camReset').onclick = resetRecognition;
-    $('camConfirm').onclick = () => {
-      if (!confirmedText) return;
-      global.Booth.confirmMessage(confirmedText, cmode, 'camera');
-    };
+    $('camAdd').onclick = addCurrent;
+    const undoB = $('camUndo'); if (undoB) undoB.onclick = undoLast;
+    const clearB = $('camClear'); if (clearB) clearB.onclick = clearBuilt;
+    const finishB = $('camFinish'); if (finishB) finishB.onclick = finishBracelet;
+    renderBuilt();
     // 모드 탭
     document.querySelectorAll('#screen-camera [data-cmode]').forEach(t => {
       t.onclick = () => {
         cmode = t.dataset.cmode;
         document.querySelectorAll('#screen-camera [data-cmode]').forEach(x => x.classList.toggle('active', x === t));
+        clearBuilt();          // 모드 바뀌면 만들던 메시지도 초기화(혼동 방지)
         resetRecognition();
       };
     });

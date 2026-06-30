@@ -81,6 +81,19 @@
     }
   }
 
+  // 모스 문자열 → 좌→우 비즈 HTML. 점=짧은 비즈, 대시=긴 비즈(길이로 구분, 색은 자유),
+  // 글자 끝=흰색 1개, 단어 끝=흰색 2개 (실물 팔찌엔 빈칸이 없으니 흰색 비즈로 글자를 구분).
+  function morseToBeadsHTML(morse) {
+    return (morse || '').split('').map(c => {
+      if (c === '.') return '<span class="bead-big dot" title="점=짧은 비즈"></span>';
+      if (c === '-') return '<span class="bead-big dash" title="대시=긴 비즈"></span>';
+      if (c === ' ') return '<span class="bead-big white" title="글자 끝=흰색 비즈"></span>';
+      if (c === '/') return '<span class="bead-big white" title="단어 끝=흰색 2개"></span><span class="bead-big white"></span>';
+      return '';
+    }).join('');
+  }
+  Booth.morseToBeadsHTML = morseToBeadsHTML;
+
   // ── ⑥ 팔찌 안내 ──
   function renderBracelet() {
     const host = document.getElementById('braceletView');
@@ -90,15 +103,7 @@
       host.innerHTML = '<p style="color:var(--muted)">아직 확정한 배열이 없어요. ④전신키나 ⑤카메라에서 메시지를 확정하면 여기에 배열이 나타나요.</p>';
       return;
     }
-    // 모스를 좌→우 비즈 배열로. 점=짧은 비즈, 대시=긴 비즈(길이로 구분, 색은 자유),
-    // 글자 끝=흰색 1개, 단어 끝=흰색 2개 (실물 팔찌엔 빈칸이 없으니 흰색 비즈로 구분).
-    const beads = msg.morse.split('').map(c => {
-      if (c === '.') return '<span class="bead-big dot" title="점=짧은 비즈"></span>';
-      if (c === '-') return '<span class="bead-big dash" title="대시=긴 비즈"></span>';
-      if (c === ' ') return '<span class="bead-big white" title="글자 끝=흰색 비즈"></span>';
-      if (c === '/') return '<span class="bead-big white" title="단어 끝=흰색 2개"></span><span class="bead-big white"></span>';
-      return '';
-    }).join('');
+    const beads = morseToBeadsHTML(msg.morse);
     host.innerHTML = `
       <div class="bracelet-msg">내 메시지: <b>${escapeHtml(msg.text)}</b> <span class="mono" style="color:var(--muted)">(${M.morseToGlyphs(msg.morse.replace(/ /g,'  ').replace(/\//g,' / '))})</span></div>
       <div class="bracelet-string">${beads}</div>
