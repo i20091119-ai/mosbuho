@@ -6,11 +6,13 @@
  *   - 짧은(둥근) 비즈 = 가로≈세로(비율~1) → 점(·)
  *     긴(원통) 비즈   = 가로≈세로×3(비율~3) → 대시(—)
  *   - 비율로 판정하므로 카메라 거리·비즈 크기와 무관(스케일 불변). 보정 불필요.
- *   - 비즈 사이 작은 틈(어두운 배경)으로 비즈를 분리 → 같은 색이 붙어도 구분됨
- *   - 색은 자유(같은 색 인접 가능). 트레이는 어두운 색이어야 비즈·틈이 보인다.
- *   - 흰색 비즈는 더 이상 구분자가 아님(점으로 보임).
+ *   - 배경 분리는 **밝기(명도) + 매 프레임 Otsu 자동 임계값**. 채도(색)를 안 쓰므로
+ *     흰/옅은 비즈도 잡히고, 어두운 트레이와 잘 분리된다(보정 불필요).
+ *   - 비즈 사이 틈(어두운 배경)으로 비즈를 분리 → 같은 색이 붙어도 구분됨
+ *   - 색은 자유(같은 색 인접 가능). 트레이는 비즈보다 어두워야 분리가 잘 된다.
+ *   - 흰색 비즈는 더 이상 구분자가 아님(밝은 점으로 보임).
  * 외부 라이브러리 없이 순수 JS: getUserMedia → <canvas> 픽셀 분석 →
- *   열(column) 라벨(배경/비즈) → 틈으로 비즈 분리 → 각 비즈 가로÷세로 비율로 점/대시 → 디코딩(한 글자).
+ *   밝기 Otsu 로 비즈/배경 분리 → 틈으로 비즈 분리 → 각 비즈 가로÷세로 비율로 점/대시 → 디코딩(한 글자).
  * ==========================================================================*/
 (function (global) {
   'use strict';
@@ -18,8 +20,9 @@
 
   // ── 분석 파라미터 ──────────────────────────────────────────────────────────
   const PROC_W = 200;            // 처리 해상도 폭(px) — 속도/정확도 균형
-  const SAT_MIN = 0.14;          // 채도 하한(비즈 인정). 낮춤 → 옅은 색 비즈도 인식
-  const VAL_MIN = 0.30;          // 명도 하한(어두운 트레이/그림자 제거) — 밝은 비즈만 통과
+  const VAL_FLOOR = 0.30;        // 명도 절대 하한(아무리 어두워도 이보다 밝아야 비즈)
+  const SEP_MIN = 40;            // 비즈/배경 밝기차(0~255) 최소 — 이보다 작으면 비즈 없음으로
+  const BRIGHT_MIN = 120;        // 비즈(밝은 쪽) 평균 명도 최소 — 어두운 프레임 오검출 방지
   const COL_RATIO = 0.12;        // 한 열이 '비즈'로 인정되는 최소 픽셀 비율
   const MIN_RUN = 3;             // 노이즈 제거: 최소 비즈 폭(px)
   const ASPECT_THR = 1.9;        // 가로÷세로 ≥ 이 값이면 대시(원통), 미만이면 점(둥근)
@@ -36,19 +39,19 @@
 
   function $(id) { return document.getElementById(id); }
 
-  // ── RGB → HSV ──────────────────────────────────────────────────────────
-  function rgb2hsv(r, g, b) {
-    r /= 255; g /= 255; b /= 255;
-    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
-    let h = 0;
-    if (d !== 0) {
-      if (mx === r) h = ((g - b) / d) % 6;
-      else if (mx === g) h = (b - r) / d + 2;
-      else h = (r - g) / d + 4;
-      h *= 60; if (h < 0) h += 360;
+  // ── Otsu: 밝기 히스토그램에서 비즈/배경을 가르는 임계값 자동 산출 ──────────────
+  function otsu(hist, total) {
+    let sum = 0; for (let i = 0; i < 256; i++) sum += i * hist[i];
+    let sumB = 0, wB = 0, maxVar = -1, thr = 128;
+    for (let t = 0; t < 256; t++) {
+      wB += hist[t]; if (wB === 0) continue;
+      const wF = total - wB; if (wF === 0) break;
+      sumB += t * hist[t];
+      const mB = sumB / wB, mF = (sum - sumB) / wF;
+      const between = wB * wF * (mB - mF) * (mB - mF);
+      if (between > maxVar) { maxVar = between; thr = t; }
     }
-    const s = mx === 0 ? 0 : d / mx;
-    return [h, s, mx];
+    return thr;
   }
 
   // ── 카메라 시작/정지 ─────────────────────────────────────────────────────
@@ -89,22 +92,37 @@
     return pctx.getImageData(0, 0, w, h);
   }
 
-  // ── 비즈 검출: 열 라벨(배경/비즈) → 틈으로 분리 + 각 비즈의 가로/세로 측정 ───
+  // ── 비즈 검출: 밝기(명도)로 배경 분리 → 틈으로 분리 + 각 비즈의 가로/세로 측정 ──
   //   반환: [{x0, x1, width, height}]  (좌→우 순서)
+  //   색(채도) 대신 밝기를 쓰는 이유: 흰/옅은 비즈도 밝아서 잡히고, 어두운 트레이와 잘 분리됨.
+  //   임계값은 매 프레임 Otsu 로 자동 결정 → 조명·배경이 달라도 보정 없이 동작.
   function detectBeads(img) {
     const { data, width: w, height: h } = img;
+    const N = w * h;
+    // 1) 픽셀별 명도 V(=RGB 최댓값) + 히스토그램
+    const V = new Uint8Array(N);
+    const hist = new Array(256).fill(0);
+    for (let p = 0; p < N; p++) {
+      const i = p * 4;
+      const v = data[i] > data[i + 1] ? (data[i] > data[i + 2] ? data[i] : data[i + 2])
+                                      : (data[i + 1] > data[i + 2] ? data[i + 1] : data[i + 2]);
+      V[p] = v; hist[v]++;
+    }
+    // 2) Otsu 임계값 + 비즈/배경 평균 명도
+    const thr = otsu(hist, N);
+    let bc = 0, bs = 0, dc = 0, ds = 0;
+    for (let t = 0; t < 256; t++) { if (t > thr) { bc += hist[t]; bs += t * hist[t]; } else { dc += hist[t]; ds += t * hist[t]; } }
+    const brightMean = bc ? bs / bc : 0, darkMean = dc ? ds / dc : 0;
+    // 비즈가 배경보다 충분히 밝지 않으면(=비즈 없음/대비 부족) 검출 안 함 → 오검출 방지
+    if (brightMean - darkMean < SEP_MIN || brightMean < BRIGHT_MIN) return [];
+    const T = Math.max(thr, Math.round(VAL_FLOOR * 255));  // 절대 하한도 함께 적용
+    // 3) 열별 비즈 픽셀 수 → 라벨
     const need = Math.max(2, Math.round(h * COL_RATIO));
     const labels = new Array(w).fill(0);   // 0 배경, 1 비즈
     const colCount = new Array(w).fill(0); // 각 열의 비즈 픽셀 수 ≈ 그 열에서 비즈 세로 두께
     for (let x = 0; x < w; x++) {
       let beadN = 0;
-      for (let y = 0; y < h; y++) {
-        const i = (y * w + x) * 4;
-        const hsv = rgb2hsv(data[i], data[i + 1], data[i + 2]);
-        const s = hsv[1], v = hsv[2];
-        if (v < VAL_MIN) continue;          // 어두운 배경(트레이)·그림자 제거 → 밝은 비즈만
-        if (s >= SAT_MIN) beadN++;          // 채도 있는 비즈(옅은 색 포함)
-      }
+      for (let y = 0; y < h; y++) { if (V[y * w + x] > T) beadN++; }
       colCount[x] = beadN;
       if (beadN >= need) labels[x] = 1;
     }
