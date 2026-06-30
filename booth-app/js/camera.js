@@ -1,14 +1,14 @@
 /* ============================================================================
  * camera.js — ⑤ 웹캠 비즈 인식 (반실물 단계, 앱 핵심 기능)
  * ----------------------------------------------------------------------------
- * 방식: **길이 기반**. 색이 아니라 비즈 길이로 점/대시를 구분한다.
+ * 방식: **길이 기반 · 한 번에 한 글자**. 색이 아니라 비즈 길이로 점/대시를 구분한다.
+ *   - 한 화면 = 알파벳/숫자 한 글자. 글자 구분(흰색·띄움)은 쓰지 않는다.
  *   - 비즈 사이 작은 틈(어두운 배경)으로 비즈를 분리 → 같은 색이 붙어도 구분됨
  *   - 짧은 비즈 = 점(·), 긴 비즈 = 대시(—)  (길이 임계값으로 판정)
- *   - 글자 구분 = 비즈 사이를 '크게 띄움'(큰 틈). 흰색 구분자는 쓰지 않음.
- *     (옅은 색 비즈가 흰색으로 오인되던 문제 때문에 흰색 인식 제거 — 색은 전부 비즈로 본다)
  *   - 색은 자유(같은 색 인접 가능). 트레이는 어두운 색이어야 틈이 보인다.
+ *   - 흰색 비즈는 카메라에 두지 말 것(점으로 오인됨). 흰색은 더 이상 구분자가 아님.
  * 외부 라이브러리 없이 순수 JS: getUserMedia → <canvas> 픽셀 분석 →
- *   열(column) 라벨(배경/비즈) → 틈으로 비즈 분리 → 길이로 점/대시, 큰 틈=글자 구분 → 디코딩.
+ *   열(column) 라벨(배경/비즈) → 틈으로 비즈 분리 → 길이로 점/대시 → 디코딩(한 글자).
  * 길이 보정: 짧은(점)·긴(대시) 비즈를 한 번씩 찍어 픽셀 길이 기준을 저장(고정 부스용).
  * ==========================================================================*/
 (function (global) {
@@ -91,7 +91,7 @@
   }
 
   // ── 비즈 검출: 열 라벨(배경/비즈) → 틈으로 분리 ────────────────────────────
-  //   반환: [{x0, x1, gapBefore}]  (좌→우 순서)  gapBefore = 직전 비즈와의 틈(px)
+  //   반환: [{x0, x1}]  (좌→우 순서)  ※ 한 글자 단위라 글자 구분(틈 크기)은 안 씀
   function detectBeads(img) {
     const { data, width: w, height: h } = img;
     const need = Math.max(2, Math.round(h * COL_RATIO));
@@ -107,14 +107,14 @@
       }
       if (beadN >= need) labels[x] = 1;
     }
-    // 틈(배경)으로 비즈 분리 — 색이 같아도 틈만 있으면 구분됨. 틈 크기를 기록(글자 구분용).
+    // 틈(배경)으로 비즈 분리 — 색이 같아도 틈만 있으면 구분됨.
     const GAP = Math.max(2, Math.round(w * 0.012));
     const beads = []; let cur = null, gap = 0;
     const close = () => { if (cur) { beads.push(cur); cur = null; } };
     for (let x = 0; x < w; x++) {
       if (labels[x] === 0) { gap++; if (cur && gap > GAP) close(); continue; }
       if (cur) cur.x1 = x;
-      else { close(); cur = { x0: x, x1: x, gapBefore: gap }; }
+      else { close(); cur = { x0: x, x1: x }; }
       gap = 0;
     }
     close();
@@ -130,29 +130,17 @@
     return Infinity;                                  // 길이 다 비슷 → 전부 점(보정 권장)
   }
 
-  // 비즈 사이 틈 → 글자 구분 임계값(큰 틈=글자 경계). 틈이 다 비슷하면 한 글자로 본다.
-  function gapThreshold(gaps) {
-    if (gaps.length < 2) return Infinity;
-    const mn = Math.min.apply(null, gaps), mx = Math.max.apply(null, gaps);
-    if (mx >= mn * 2.2 && mx >= 6) return Math.sqrt(Math.max(mn, 1) * mx); // 틈이 확연히 큰 게 있음 → 글자 경계
-    return Infinity;                                                        // 틈 비슷 → 한 글자
-  }
-
-  // 비즈 → 모스 → 글자  (길이=점/대시, 큰 틈=글자 구분)
+  // 비즈 → 모스 → 글자  (한 번에 한 글자만: 길이로 점/대시, 글자 구분 없음)
   function analyzeImg(img) {
     const beads = detectBeads(img);
     if (!beads.length) return { beads: [], morse: '', text: '' };
     const lens = beads.map(b => b.x1 - b.x0 + 1);
     const thr = lengthThreshold(lens);
-    const gapThr = gapThreshold(beads.slice(1).map(b => b.gapBefore));
     let morse = '';
-    beads.forEach((b, i) => {
-      if (i > 0 && b.gapBefore >= gapThr) morse += ' '; // 글자 구분(큰 틈)
+    beads.forEach(b => {
       b.dot = (b.x1 - b.x0 + 1) < thr;
-      b.letterBreak = i > 0 && b.gapBefore >= gapThr;
       morse += b.dot ? '.' : '-';
     });
-    morse = morse.trim();
     return { beads, morse, text: decodeMorse(morse) };
   }
 
@@ -187,12 +175,6 @@
       octx.strokeStyle = b.dot ? '#E8943D' : '#3D8FE8';
       octx.lineWidth = 3;
       octx.strokeRect(x, ry, bw, rh);
-      if (b.letterBreak) {  // 글자 경계(큰 틈)에 점선 표시
-        octx.save();
-        octx.strokeStyle = '#cfd4da'; octx.lineWidth = 2; octx.setLineDash([5, 4]);
-        octx.beginPath(); octx.moveTo(x - 3, ry); octx.lineTo(x - 3, ry + rh); octx.stroke();
-        octx.restore();
-      }
     });
   }
 
@@ -220,8 +202,7 @@
   }
 
   function beadLabel(b) {
-    const sep = b.letterBreak ? '<span class="bead sep">↔글자</span>' : '';
-    return sep + (b.dot ? '<span class="bead dot">짧은·점</span>' : '<span class="bead dash">긴·대시</span>');
+    return b.dot ? '<span class="bead dot">짧은·점</span>' : '<span class="bead dash">긴·대시</span>';
   }
 
   function renderReadout(res) {
@@ -240,8 +221,6 @@
     if (!res.beads.length) { el.innerHTML = '<span style="color:var(--muted);font-size:13px">비즈를 인식하면 한 단계씩 보여줘요</span>'; return; }
     let h = '';
     res.beads.forEach((b, i) => {
-      if (b.letterBreak) h += `<div class="algo-step"><span class="algo-n">↔</span>
-        <span>틈이 큼 → <b style="color:var(--muted)">글자 구분(띄움)</b></span></div>`;
       const name = b.dot ? '짧은 비즈' : '긴 비즈';
       const sym = b.dot ? '점(·)' : '대시(—)';
       const col = b.dot ? 'var(--dot)' : 'var(--dash)';

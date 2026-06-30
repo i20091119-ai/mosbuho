@@ -305,10 +305,9 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
 .bead { display: inline-flex; align-items: center; justify-content: center; border-radius: var(--r-pill); font-size: 12px; font-weight: 800; color: #fff; }
 .bead.red { background: var(--dot); padding: 4px 12px; }
 .bead.blue { background: var(--dash); padding: 4px 18px; }
-/* 길이 기반 인식 결과 칩: 짧은(점)·긴(대시)·흰색(글자끝) */
+/* 길이 기반 인식 결과 칩: 짧은(점)·긴(대시) */
 .bead.dot  { background: var(--dot);  padding: 4px 12px; }
 .bead.dash { background: var(--dash); padding: 4px 20px; }
-.bead.sep  { background: #e8ebee; color: #5b6470; padding: 4px 12px; }
 
 .calib-state { font-size: 13px; font-weight: 700; color: var(--muted); }
 .calib-swatch { display: inline-block; width: 16px; height: 16px; border-radius: 4px; vertical-align: middle; margin-right: 4px; border: 1px solid var(--line); }
@@ -419,8 +418,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
 /* 길이 기반: 짧은 비즈=점(원), 긴 비즈=대시(3배 길이). 색은 자유라 중립색으로 표시 */
 .bead-big.dot  { width: 26px; height: 26px; border-radius: 50%; background: #94a3b4; }
 .bead-big.dash { width: 78px; height: 26px; border-radius: 13px; background: #94a3b4; }
-/* 글자 구분용 흰색 비즈 — 조금 두툼하게, 색 비즈와 확실히 구분 */
-.bead-big.white { width: 22px; height: 32px; border-radius: 11px; background: #fff; border: 2px solid #c2c7cd; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+/* 글자/단어 사이 띄움 — 흰색 비즈가 아니라 빈 간격으로만 표시(한 글자씩 만들기) */
 .bead-sep { width: 16px; }
 .bead-sep.wide { width: 34px; }
 
