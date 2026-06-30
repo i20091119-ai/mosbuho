@@ -4,10 +4,11 @@
  * 방식: **길이 기반**. 색이 아니라 비즈 길이로 점/대시를 구분한다.
  *   - 비즈 사이 작은 틈(어두운 배경)으로 비즈를 분리 → 같은 색이 붙어도 구분됨
  *   - 짧은 비즈 = 점(·), 긴 비즈 = 대시(—)  (길이 임계값으로 판정)
- *   - 흰색 비즈(채도 낮음) = 글자 구분(공백)  ※ 다른 비즈엔 흰색 안 씀
- *   - 색은 자유(같은 색 인접 가능). 트레이는 어두운 색이어야 틈·흰색이 보임.
+ *   - 글자 구분 = 비즈 사이를 '크게 띄움'(큰 틈). 흰색 구분자는 쓰지 않음.
+ *     (옅은 색 비즈가 흰색으로 오인되던 문제 때문에 흰색 인식 제거 — 색은 전부 비즈로 본다)
+ *   - 색은 자유(같은 색 인접 가능). 트레이는 어두운 색이어야 틈이 보인다.
  * 외부 라이브러리 없이 순수 JS: getUserMedia → <canvas> 픽셀 분석 →
- *   열(column) 라벨(배경/색/흰색) → 틈으로 비즈 분리 → 길이로 점/대시 → 디코딩.
+ *   열(column) 라벨(배경/비즈) → 틈으로 비즈 분리 → 길이로 점/대시, 큰 틈=글자 구분 → 디코딩.
  * 길이 보정: 짧은(점)·긴(대시) 비즈를 한 번씩 찍어 픽셀 길이 기준을 저장(고정 부스용).
  * ==========================================================================*/
 (function (global) {
@@ -16,12 +17,10 @@
 
   // ── 분석 파라미터 ──────────────────────────────────────────────────────────
   const PROC_W = 200;            // 처리 해상도 폭(px) — 속도/정확도 균형
-  const SAT_MIN = 0.30;          // 채도 하한(색 비즈 인정). 보정으로 조정 가능
+  const SAT_MIN = 0.14;          // 채도 하한(비즈 인정). 낮춤 → 옅은 색 비즈도 인식
   const VAL_MIN = 0.18;          // 명도 하한(어두운 트레이/그림자 제거)
   const COL_RATIO = 0.12;        // 한 열이 '비즈'로 인정되는 최소 픽셀 비율
   const MIN_RUN = 3;             // 노이즈 제거: 최소 비즈 폭(px)
-  const WHITE_SAT_MAX = 0.22;    // 이하 채도 = 흰/회색(구분자 후보)
-  const WHITE_VAL_MIN = 0.55;    // 이상 명도 = 밝음(흰색 비즈)
   const ROI = { x0: 0.08, x1: 0.92, y0: 0.30, y1: 0.70 }; // 인식 영역(화면 비율)
 
   // 보정값 — satMin(색 채도하한) + 길이 기준(점/대시)
@@ -90,41 +89,38 @@
     return pctx.getImageData(0, 0, w, h);
   }
 
-  // ── 비즈 검출: 열 라벨(배경/색/흰색) → 틈으로 분리 ─────────────────────────
-  //   반환: [{type:'color'|'white', x0, x1}]  (좌→우 순서)
+  // ── 비즈 검출: 열 라벨(배경/비즈) → 틈으로 분리 ────────────────────────────
+  //   반환: [{x0, x1, gapBefore}]  (좌→우 순서)  gapBefore = 직전 비즈와의 틈(px)
   function detectBeads(img) {
     const { data, width: w, height: h } = img;
     const need = Math.max(2, Math.round(h * COL_RATIO));
-    const labels = new Array(w).fill(0); // 0 배경, 1 색비즈, 2 흰색
+    const labels = new Array(w).fill(0); // 0 배경, 1 비즈
     for (let x = 0; x < w; x++) {
-      let colorN = 0, whiteN = 0;
+      let beadN = 0;
       for (let y = 0; y < h; y++) {
         const i = (y * w + x) * 4;
-        const [hue, s, v] = rgb2hsv(data[i], data[i + 1], data[i + 2]);
-        if (v < VAL_MIN) continue;                              // 어두운 배경(트레이) 제거
-        if (s < WHITE_SAT_MAX && v >= WHITE_VAL_MIN) whiteN++;  // 흰색 비즈(구분자)
-        else if (s >= calib.satMin) colorN++;                   // 채도 있는 색 비즈
+        const hsv = rgb2hsv(data[i], data[i + 1], data[i + 2]);
+        const s = hsv[1], v = hsv[2];
+        if (v < VAL_MIN) continue;          // 어두운 배경(트레이) 제거
+        if (s >= calib.satMin) beadN++;      // 채도 있는 비즈(옅은 색 포함)
       }
-      if (colorN >= need && colorN >= whiteN) labels[x] = 1;
-      else if (whiteN >= need) labels[x] = 2;
+      if (beadN >= need) labels[x] = 1;
     }
-    // 틈(배경)으로 비즈 분리 — 색이 같아도 틈만 있으면 구분됨. 색↔흰 전환도 분리.
+    // 틈(배경)으로 비즈 분리 — 색이 같아도 틈만 있으면 구분됨. 틈 크기를 기록(글자 구분용).
     const GAP = Math.max(2, Math.round(w * 0.012));
     const beads = []; let cur = null, gap = 0;
     const close = () => { if (cur) { beads.push(cur); cur = null; } };
     for (let x = 0; x < w; x++) {
-      const L = labels[x];
-      if (L === 0) { gap++; if (cur && gap > GAP) close(); continue; }
+      if (labels[x] === 0) { gap++; if (cur && gap > GAP) close(); continue; }
+      if (cur) cur.x1 = x;
+      else { close(); cur = { x0: x, x1: x, gapBefore: gap }; }
       gap = 0;
-      const type = L === 2 ? 'white' : 'color';
-      if (cur && cur.type === type) cur.x1 = x;
-      else { close(); cur = { type, x0: x, x1: x }; }
     }
     close();
     return beads.filter(b => (b.x1 - b.x0 + 1) >= MIN_RUN);
   }
 
-  // 색 비즈 길이 → 점(짧)/대시(김) 임계값
+  // 비즈 길이 → 점(짧)/대시(김) 임계값
   function lengthThreshold(lens) {
     if (calib.dotLen && calib.dashLen) return (calib.dotLen + calib.dashLen) / 2;  // 보정값 우선(고정 부스)
     if (!lens.length) return Infinity;
@@ -133,17 +129,28 @@
     return Infinity;                                  // 길이 다 비슷 → 전부 점(보정 권장)
   }
 
-  // 비즈 → 모스 → 글자  (흰색=글자 구분, 길이=점/대시)
+  // 비즈 사이 틈 → 글자 구분 임계값(큰 틈=글자 경계). 틈이 다 비슷하면 한 글자로 본다.
+  function gapThreshold(gaps) {
+    if (gaps.length < 2) return Infinity;
+    const mn = Math.min.apply(null, gaps), mx = Math.max.apply(null, gaps);
+    if (mx >= mn * 2.2 && mx >= 6) return Math.sqrt(Math.max(mn, 1) * mx); // 틈이 확연히 큰 게 있음 → 글자 경계
+    return Infinity;                                                        // 틈 비슷 → 한 글자
+  }
+
+  // 비즈 → 모스 → 글자  (길이=점/대시, 큰 틈=글자 구분)
   function analyzeImg(img) {
     const beads = detectBeads(img);
     if (!beads.length) return { beads: [], morse: '', text: '' };
-    const lens = beads.filter(b => b.type === 'color').map(b => b.x1 - b.x0 + 1);
+    const lens = beads.map(b => b.x1 - b.x0 + 1);
     const thr = lengthThreshold(lens);
+    const gapThr = gapThreshold(beads.slice(1).map(b => b.gapBefore));
     let morse = '';
-    for (const b of beads) {
-      if (b.type === 'white') { if (morse && !morse.endsWith(' ')) morse += ' '; }
-      else { b.dot = (b.x1 - b.x0 + 1) < thr; morse += b.dot ? '.' : '-'; }
-    }
+    beads.forEach((b, i) => {
+      if (i > 0 && b.gapBefore >= gapThr) morse += ' '; // 글자 구분(큰 틈)
+      b.dot = (b.x1 - b.x0 + 1) < thr;
+      b.letterBreak = i > 0 && b.gapBefore >= gapThr;
+      morse += b.dot ? '.' : '-';
+    });
     morse = morse.trim();
     return { beads, morse, text: decodeMorse(morse) };
   }
@@ -176,9 +183,15 @@
     beads.forEach(b => {
       const x = rx0 + (b.x0 / w) * rw;
       const bw = ((b.x1 - b.x0 + 1) / w) * rw;
-      octx.strokeStyle = b.type === 'white' ? '#cfd4da' : (b.dot ? '#E8943D' : '#3D8FE8');
+      octx.strokeStyle = b.dot ? '#E8943D' : '#3D8FE8';
       octx.lineWidth = 3;
       octx.strokeRect(x, ry, bw, rh);
+      if (b.letterBreak) {  // 글자 경계(큰 틈)에 점선 표시
+        octx.save();
+        octx.strokeStyle = '#cfd4da'; octx.lineWidth = 2; octx.setLineDash([5, 4]);
+        octx.beginPath(); octx.moveTo(x - 3, ry); octx.lineTo(x - 3, ry + rh); octx.stroke();
+        octx.restore();
+      }
     });
   }
 
@@ -206,8 +219,8 @@
   }
 
   function beadLabel(b) {
-    if (b.type === 'white') return '<span class="bead sep">흰·글자끝</span>';
-    return b.dot ? '<span class="bead dot">짧은·점</span>' : '<span class="bead dash">긴·대시</span>';
+    const sep = b.letterBreak ? '<span class="bead sep">↔글자</span>' : '';
+    return sep + (b.dot ? '<span class="bead dot">짧은·점</span>' : '<span class="bead dash">긴·대시</span>');
   }
 
   function renderReadout(res) {
@@ -226,10 +239,11 @@
     if (!res.beads.length) { el.innerHTML = '<span style="color:var(--muted);font-size:13px">비즈를 인식하면 한 단계씩 보여줘요</span>'; return; }
     let h = '';
     res.beads.forEach((b, i) => {
-      let name, sym, col;
-      if (b.type === 'white') { name = '흰색 비즈'; sym = '글자 끝(띄움)'; col = 'var(--muted)'; }
-      else if (b.dot) { name = '짧은 비즈'; sym = '점(·)'; col = 'var(--dot)'; }
-      else { name = '긴 비즈'; sym = '대시(—)'; col = 'var(--dash)'; }
+      if (b.letterBreak) h += `<div class="algo-step"><span class="algo-n">↔</span>
+        <span>틈이 큼 → <b style="color:var(--muted)">글자 구분(띄움)</b></span></div>`;
+      const name = b.dot ? '짧은 비즈' : '긴 비즈';
+      const sym = b.dot ? '점(·)' : '대시(—)';
+      const col = b.dot ? 'var(--dot)' : 'var(--dash)';
       h += `<div class="algo-step">
         <span class="algo-n">${i + 1}</span>
         <span>${i + 1}번째: <b style="color:${col}">${name}</b> → <b>${sym}</b></span></div>`;
@@ -243,9 +257,9 @@
   function calibrate(which) { // 'dot' | 'dash'
     const img = grabROI();
     if (!img) return;
-    const beads = detectBeads(img).filter(b => b.type === 'color');
+    const beads = detectBeads(img);
     if (!beads.length) { setCalibMsg('비즈가 안 보여요. ROI 가운데에 비즈 1개를 크게 두고 다시 보정하세요.'); return; }
-    const len = Math.max.apply(null, beads.map(b => b.x1 - b.x0 + 1)); // 가장 긴 색 비즈(노이즈 방지)
+    const len = Math.max.apply(null, beads.map(b => b.x1 - b.x0 + 1)); // 가장 긴 비즈(노이즈 방지)
     if (which === 'dot') calib.dotLen = len; else calib.dashLen = len;
     const both = calib.dotLen && calib.dashLen;
     setCalibMsg(`${which === 'dot' ? '짧은(점)' : '긴(대시)'} 비즈 길이 보정 완료 (${len}px).` +
