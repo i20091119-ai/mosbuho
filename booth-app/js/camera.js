@@ -1,15 +1,16 @@
 /* ============================================================================
  * camera.js — ⑤ 웹캠 비즈 인식 (반실물 단계, 앱 핵심 기능)
  * ----------------------------------------------------------------------------
- * 방식: **길이 기반 · 한 번에 한 글자**. 색이 아니라 비즈 길이로 점/대시를 구분한다.
+ * 방식: **모양(가로÷세로 비율) 기반 · 한 번에 한 글자**. 보정이 필요 없다.
  *   - 한 화면 = 알파벳/숫자 한 글자. 글자 구분(흰색·띄움)은 쓰지 않는다.
+ *   - 짧은(둥근) 비즈 = 가로≈세로(비율~1) → 점(·)
+ *     긴(원통) 비즈   = 가로≈세로×3(비율~3) → 대시(—)
+ *   - 비율로 판정하므로 카메라 거리·비즈 크기와 무관(스케일 불변). 보정 불필요.
  *   - 비즈 사이 작은 틈(어두운 배경)으로 비즈를 분리 → 같은 색이 붙어도 구분됨
- *   - 짧은 비즈 = 점(·), 긴 비즈 = 대시(—)  (길이 임계값으로 판정)
- *   - 색은 자유(같은 색 인접 가능). 트레이는 어두운 색이어야 틈이 보인다.
- *   - 흰색 비즈는 카메라에 두지 말 것(점으로 오인됨). 흰색은 더 이상 구분자가 아님.
+ *   - 색은 자유(같은 색 인접 가능). 트레이는 어두운 색이어야 비즈·틈이 보인다.
+ *   - 흰색 비즈는 더 이상 구분자가 아님(점으로 보임).
  * 외부 라이브러리 없이 순수 JS: getUserMedia → <canvas> 픽셀 분석 →
- *   열(column) 라벨(배경/비즈) → 틈으로 비즈 분리 → 길이로 점/대시 → 디코딩(한 글자).
- * 길이 보정: 짧은(점)·긴(대시) 비즈를 한 번씩 찍어 픽셀 길이 기준을 저장(고정 부스용).
+ *   열(column) 라벨(배경/비즈) → 틈으로 비즈 분리 → 각 비즈 가로÷세로 비율로 점/대시 → 디코딩(한 글자).
  * ==========================================================================*/
 (function (global) {
   'use strict';
@@ -18,13 +19,11 @@
   // ── 분석 파라미터 ──────────────────────────────────────────────────────────
   const PROC_W = 200;            // 처리 해상도 폭(px) — 속도/정확도 균형
   const SAT_MIN = 0.14;          // 채도 하한(비즈 인정). 낮춤 → 옅은 색 비즈도 인식
-  const VAL_MIN = 0.18;          // 명도 하한(어두운 트레이/그림자 제거)
+  const VAL_MIN = 0.30;          // 명도 하한(어두운 트레이/그림자 제거) — 밝은 비즈만 통과
   const COL_RATIO = 0.12;        // 한 열이 '비즈'로 인정되는 최소 픽셀 비율
   const MIN_RUN = 3;             // 노이즈 제거: 최소 비즈 폭(px)
+  const ASPECT_THR = 1.9;        // 가로÷세로 ≥ 이 값이면 대시(원통), 미만이면 점(둥근)
   const ROI = { x0: 0.08, x1: 0.92, y0: 0.30, y1: 0.70 }; // 인식 영역(화면 비율)
-
-  // 보정값 — satMin(색 채도하한) + 길이 기준(점/대시)
-  let calib = { satMin: SAT_MIN, dotLen: 0, dashLen: 0 };
 
   // 상태
   let stream = null, raf = null, running = false;
@@ -62,7 +61,7 @@
       await video.play();
       running = true;
       $('camMsg').style.display = 'none';
-      ['camStop', 'camCalibDot', 'camCalibDash', 'camReset'].forEach(id => { const e = $(id); if (e) e.disabled = false; });
+      ['camStop', 'camReset'].forEach(id => { const e = $(id); if (e) e.disabled = false; });
       loop();
     } catch (e) {
       $('camMsg').innerHTML = '<img class="ic-lg" src="assets/icons/camera-off.svg" alt="" onerror="this.style.display=\'none\'"><div>카메라를 열 수 없습니다.<br>권한을 허용했는지, UNO Q에 웹캠이 연결됐는지 확인하세요.</div>';
@@ -75,7 +74,7 @@
     $('camMsg').style.display = 'flex';
     $('camMsg').innerHTML = '<img class="ic-lg" src="assets/icons/camera.svg" alt="" onerror="this.style.display=\'none\'"><div>카메라가 꺼졌습니다</div><button class="btn primary" id="camStart">카메라 켜기</button>';
     $('camStart').onclick = start;
-    ['camStop', 'camCalibDot', 'camCalibDash', 'camReset', 'camAdd'].forEach(id => { const e = $(id); if (e) e.disabled = true; });
+    ['camStop', 'camReset', 'camAdd'].forEach(id => { const e = $(id); if (e) e.disabled = true; });
   }
 
   // ── ROI 픽셀을 처리 캔버스로 가져오기 ──────────────────────────────────────
@@ -90,21 +89,23 @@
     return pctx.getImageData(0, 0, w, h);
   }
 
-  // ── 비즈 검출: 열 라벨(배경/비즈) → 틈으로 분리 ────────────────────────────
-  //   반환: [{x0, x1}]  (좌→우 순서)  ※ 한 글자 단위라 글자 구분(틈 크기)은 안 씀
+  // ── 비즈 검출: 열 라벨(배경/비즈) → 틈으로 분리 + 각 비즈의 가로/세로 측정 ───
+  //   반환: [{x0, x1, width, height}]  (좌→우 순서)
   function detectBeads(img) {
     const { data, width: w, height: h } = img;
     const need = Math.max(2, Math.round(h * COL_RATIO));
-    const labels = new Array(w).fill(0); // 0 배경, 1 비즈
+    const labels = new Array(w).fill(0);   // 0 배경, 1 비즈
+    const colCount = new Array(w).fill(0); // 각 열의 비즈 픽셀 수 ≈ 그 열에서 비즈 세로 두께
     for (let x = 0; x < w; x++) {
       let beadN = 0;
       for (let y = 0; y < h; y++) {
         const i = (y * w + x) * 4;
         const hsv = rgb2hsv(data[i], data[i + 1], data[i + 2]);
         const s = hsv[1], v = hsv[2];
-        if (v < VAL_MIN) continue;          // 어두운 배경(트레이) 제거
-        if (s >= calib.satMin) beadN++;      // 채도 있는 비즈(옅은 색 포함)
+        if (v < VAL_MIN) continue;          // 어두운 배경(트레이)·그림자 제거 → 밝은 비즈만
+        if (s >= SAT_MIN) beadN++;          // 채도 있는 비즈(옅은 색 포함)
       }
+      colCount[x] = beadN;
       if (beadN >= need) labels[x] = 1;
     }
     // 틈(배경)으로 비즈 분리 — 색이 같아도 틈만 있으면 구분됨.
@@ -118,27 +119,25 @@
       gap = 0;
     }
     close();
-    return beads.filter(b => (b.x1 - b.x0 + 1) >= MIN_RUN);
+    // 각 비즈의 가로(폭) + 세로(두께≈지름) 측정. 세로는 열별 두께의 상위 80% 값(가장자리 노이즈 방지).
+    beads.forEach(b => {
+      b.width = b.x1 - b.x0 + 1;
+      const cnts = [];
+      for (let x = b.x0; x <= b.x1; x++) cnts.push(colCount[x]);
+      cnts.sort((a, c) => a - c);
+      b.height = cnts[Math.min(cnts.length - 1, Math.floor(cnts.length * 0.8))] || 1;
+    });
+    return beads.filter(b => b.width >= MIN_RUN);
   }
 
-  // 비즈 길이 → 점(짧)/대시(김) 임계값
-  function lengthThreshold(lens) {
-    if (calib.dotLen && calib.dashLen) return (calib.dotLen + calib.dashLen) / 2;  // 보정값 우선(고정 부스)
-    if (!lens.length) return Infinity;
-    const mn = Math.min.apply(null, lens), mx = Math.max.apply(null, lens);
-    if (mx / mn >= 1.8) return Math.sqrt(mn * mx);   // 둘 다 있음 → 기하 중간값(대시=3배라 안전)
-    return Infinity;                                  // 길이 다 비슷 → 전부 점(보정 권장)
-  }
-
-  // 비즈 → 모스 → 글자  (한 번에 한 글자만: 길이로 점/대시, 글자 구분 없음)
+  // 비즈 → 모스 → 글자  (한 번에 한 글자: 가로÷세로 비율로 점/대시, 글자 구분 없음)
   function analyzeImg(img) {
     const beads = detectBeads(img);
     if (!beads.length) return { beads: [], morse: '', text: '' };
-    const lens = beads.map(b => b.x1 - b.x0 + 1);
-    const thr = lengthThreshold(lens);
     let morse = '';
     beads.forEach(b => {
-      b.dot = (b.x1 - b.x0 + 1) < thr;
+      b.aspect = b.width / Math.max(1, b.height);
+      b.dot = b.aspect < ASPECT_THR;       // 둥근(비율<1.9)=점, 길쭉(비율≥1.9)=대시
       morse += b.dot ? '.' : '-';
     });
     return { beads, morse, text: decodeMorse(morse) };
@@ -233,21 +232,6 @@
     el.innerHTML = h;
   }
 
-  // ── 길이 보정: ROI 가운데에 비즈 1개를 두고 그 길이를 점/대시 기준으로 저장 ──
-  function calibrate(which) { // 'dot' | 'dash'
-    const img = grabROI();
-    if (!img) return;
-    const beads = detectBeads(img);
-    if (!beads.length) { setCalibMsg('비즈가 안 보여요. ROI 가운데에 비즈 1개를 크게 두고 다시 보정하세요.'); return; }
-    const len = Math.max.apply(null, beads.map(b => b.x1 - b.x0 + 1)); // 가장 긴 비즈(노이즈 방지)
-    if (which === 'dot') calib.dotLen = len; else calib.dashLen = len;
-    const both = calib.dotLen && calib.dashLen;
-    setCalibMsg(`${which === 'dot' ? '짧은(점)' : '긴(대시)'} 비즈 길이 보정 완료 (${len}px).` +
-      (both ? ` 점/대시 기준 = ${Math.round((calib.dotLen + calib.dashLen) / 2)}px. 인식 준비 완료!`
-            : ' 나머지(' + (which === 'dot' ? '긴' : '짧은') + ') 비즈도 보정하세요.'));
-  }
-  function setCalibMsg(msg) { const e = $('camCalibState'); if (e) e.textContent = msg; }
-
   function resetRecognition() {
     lastResult = ''; pending = ''; stableCount = 0; confirmedText = ''; confirmedMorse = '';
     renderReadout({ beads: [], morse: '', text: '' });
@@ -298,8 +282,6 @@
 
     $('camStart').onclick = start;
     $('camStop').onclick = stop;
-    const cd = $('camCalibDot'); if (cd) cd.onclick = () => calibrate('dot');
-    const cda = $('camCalibDash'); if (cda) cda.onclick = () => calibrate('dash');
     $('camReset').onclick = resetRecognition;
     $('camAdd').onclick = addCurrent;
     const undoB = $('camUndo'); if (undoB) undoB.onclick = undoLast;
@@ -321,5 +303,5 @@
   }
 
   // 테스트 훅(synthetic ImageData 로 인식 로직 검증용)
-  global.Camera = { init, _analyzeImg: analyzeImg, _setCalib: c => Object.assign(calib, c) };
+  global.Camera = { init, _analyzeImg: analyzeImg, _detectBeads: detectBeads };
 })(window);

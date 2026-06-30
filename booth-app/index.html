@@ -142,8 +142,6 @@
             </div>
             <div class="cam-controls">
               <button class="btn" id="camStop" disabled>정지</button>
-              <button class="btn purple" id="camCalibDot" disabled>짧은(점) 비즈 보정</button>
-              <button class="btn purple" id="camCalibDash" disabled>긴(대시) 비즈 보정</button>
               <button class="btn" id="camReset" disabled>인식 초기화</button>
               <button class="btn ok" id="camAdd" disabled>✓ 이 글자 추가 (팔찌에 꿰기)</button>
             </div>
@@ -174,8 +172,8 @@
             <div class="algo-steps" id="camAlgo"><span style="color:var(--muted);font-size:13px">비즈를 인식하면 한 단계씩 보여줘요</span></div>
           </div>
           <div class="card" style="margin-top:16px">
-            <div class="card-title">길이 보정 상태</div>
-            <div class="calib-state" id="camCalibState">처음 한 번: ROI에 <b>짧은 비즈</b> 1개 두고 "짧은 보정", <b>긴 비즈</b> 1개 두고 "긴 보정" → 점/대시 길이 기준이 잡혀요. (고정 부스라 한 번이면 됨)</div>
+            <div class="card-title">비즈 모양 안내</div>
+            <div class="calib-state" id="camCalibState"><b>둥근(짧은) 비즈 = 점(·)</b>, <b>긴 원통 비즈 = 대시(—)</b> — 모양(가로÷세로)으로 자동 구분돼요. <b>보정 필요 없음.</b> 어두운 트레이에 가로로 눕혀 놓으세요.</div>
             <div class="mode-tabs" style="margin-top:12px">
               <span class="calib-state">모드:</span>
               <button class="mode-tab active" data-cmode="en">영어</button>
