@@ -127,7 +127,13 @@ body {
   position: absolute; inset: 0; padding: 14px 28px; overflow-y: auto;
   display: none; animation: fade .25s ease;
 }
-.screen.active { display: block; }
+/* 세로로 가운데 정렬해 큰 화면(고해상도/세로 긴 모니터)에서 아래 공백을 없앤다.
+   내용이 화면보다 길면 위부터 시작해 스크롤(safe) — 작은 화면에서도 안 잘림. */
+.screen.active {
+  display: flex; flex-direction: column;
+  justify-content: center;
+  justify-content: safe center;
+}
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 /* ════════════════════════════ 공통 컴포넌트 ════════════════════════════ */
