@@ -160,7 +160,7 @@
     const hintBtn = data.decode.hint ? `<button class="btn sm" id="hintBtn">글자 구분 힌트</button>` : '';
 
     wrap.innerHTML = `
-      <div class="card mission-card">
+      <div class="card mission-card" id="decodeCard">
         <div class="card-title">해독 미션 — 우주에서 온 신호 풀기 (복호화) ${hintBtn}</div>
         <div class="mission-prompt">${data.decode.prompt}</div>
         <div class="signal-stage">
@@ -232,6 +232,8 @@
 
   function openReply() {
     const rc = $('replyCard'); rc.style.display = '';
+    // 해독 끝 → 해독 카드의 큰 부분(신호·보기)을 접어 한 화면에 응답까지 들어오게.
+    const dc = $('decodeCard'); if (dc) dc.classList.add('decode-done');
     $('replyPrompt').textContent = data.reply.prompt;
     // 응답 정답 = 앞글자(base) + 수학 문제의 답. 정답 모스는 보여주지 않음.
     const base = data.reply.base || '';
