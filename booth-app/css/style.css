@@ -179,7 +179,8 @@ body {
 .shapes { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .shapes.sm .m-dot { width: 9px; height: 9px; }
 .shapes.sm .m-dash { width: 22px; height: 9px; border-radius: 4px; }
-.legend { display: flex; gap: 18px; align-items: center; font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.legend { display: flex; flex-wrap: wrap; gap: 7px 16px; align-items: center; font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.legend > span { white-space: nowrap; }   /* 항목이 글자 중간에서 안 깨지게(한 줄 유지) */
 .legend .dot-k { color: var(--dot); }
 .legend .dash-k { color: var(--dash); }
 
