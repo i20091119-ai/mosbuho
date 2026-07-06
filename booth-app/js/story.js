@@ -117,7 +117,7 @@
     // 버튼 라벨
     const last = (phase === 'intro' && sceneIdx >= 1) ;
     $('storyNext').textContent = (phase === 'intro' && sceneIdx >= 1) ? '신호 해독하러 가기 →'
-      : (phase === 'success' && sceneIdx >= 3) ? '전신키로 계속하기 →' : '다음 →';
+      : (phase === 'success' && sceneIdx >= 3) ? '비즈로 팔찌 만들러 가기 →' : '다음 →';
     $('storyPrev').style.visibility = (sceneIdx === (phase === 'intro' ? 0 : 2)) ? 'hidden' : 'visible';
   }
   function storyNext() {
@@ -125,9 +125,9 @@
     if (phase === 'intro') {
       if (sceneIdx < 1) { sceneIdx++; renderStory(); }
       else { buildMission(); global.showScreen('mission'); }
-    } else { // success: 해피엔딩 후엔 ④전신키로 이어서 활동 계속 (마무리는 ⑦ 뒤에)
+    } else { // success: 해피엔딩 후엔 ④카메라로 이어서 활동 계속 (마무리는 ⑥ 뒤에)
       if (sceneIdx < 3) { sceneIdx++; renderStory(); }
-      else { global.showScreen('telegraph'); }
+      else { global.showScreen('camera'); }
     }
   }
   function storyPrev() {
@@ -179,7 +179,8 @@
         <div class="reply-decoded">보낸 내용: <b id="replyDecodedText">—</b></div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button class="btn ok" id="replyCheck">확인</button>
-          <button class="btn sm" id="replyClear">지우기</button>
+          <button class="btn sm" id="replyDel">← 한 글자 지우기</button>
+          <button class="btn sm" id="replyClear">전체 지우기</button>
         </div>
         <div class="mission-feedback" id="replyFb"></div>
       </div>`;
@@ -272,6 +273,17 @@
     });
     $('replyCheck').onclick = checkReply;
     $('replyClear').onclick = () => { replyText = ''; replyComposer = new M.HangulComposer(); replyKey.reset(); $('replyDecodedText').textContent = '—'; };
+    // 한 글자씩 지우기 (전체가 아니라 마지막 글자만) — 미션은 영/숫자라 slice 로 충분, ko 는 합성기 재구성
+    $('replyDel').onclick = () => {
+      if (data.mode === 'ko') {
+        replyComposer.flush();
+        const t = replyComposer.getFullText().slice(0, -1);
+        replyComposer = new M.HangulComposer(); replyComposer.committed = t; replyText = t;
+      } else {
+        replyText = replyText.slice(0, -1);
+      }
+      $('replyDecodedText').textContent = replyText || '—';
+    };
     if (rc.scrollIntoView) rc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 

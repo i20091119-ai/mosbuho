@@ -36,6 +36,9 @@
   let stableCount = 0, pending = '';
   let confirmedText = '', confirmedMorse = '';
   let built = [];        // 한 글자씩 누적: [{ text, morse }]  → 팔찌 만들기
+  const MAXLEN = { en: 3, ko: 3, num: 4 };   // 이니셜(영/한 3자)·날짜(숫자 4자)
+  function capOf() { return MAXLEN[cmode] || 4; }
+  function atCap() { return built.length >= capOf(); }
 
   function $(id) { return document.getElementById(id); }
 
@@ -228,7 +231,7 @@
     else { beadsEl.innerHTML = res.beads.map(beadLabel).join(''); }
     $('camMorse').textContent = M.morseToGlyphs(res.morse.replace(/ /g, '  '));
     $('camText').textContent = res.text || '';
-    const add = $('camAdd'); if (add) add.disabled = !res.text;
+    const add = $('camAdd'); if (add) add.disabled = !res.text || atCap();
     renderAlgo(res);
   }
 
@@ -259,6 +262,7 @@
   // 흐름: ① 한 글자 비즈를 카메라에 → 인식 → ② '이 글자 추가' → 팔찌에 실물로 꿰기 → 반복
   function addCurrent() {
     if (!confirmedText) return;
+    if (atCap()) return;       // 이니셜 3자 / 날짜 4자 초과 방지
     built.push({ text: confirmedText, morse: confirmedMorse });
     renderBuilt();
     resetRecognition();        // 다음 글자를 놓을 수 있게 현재 인식 비움
@@ -282,6 +286,9 @@
     }
     const u = $('camUndo'), c = $('camClear'), f = $('camFinish');
     if (u) u.disabled = !has; if (c) c.disabled = !has; if (f) f.disabled = !has;
+    const cnt = $('camBuiltCount');
+    if (cnt) cnt.textContent = `(${built.length}/${capOf()}자${atCap() ? ' · 다 채웠어요!' : ''})`;
+    const add = $('camAdd'); if (add && atCap()) add.disabled = true;   // 가득 차면 추가 잠금
   }
   function escapeHtml(s) { return (s || '').replace(/[&<>]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch])); }
 

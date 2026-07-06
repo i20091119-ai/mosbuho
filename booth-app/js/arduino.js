@@ -125,14 +125,6 @@
     $('ardPlay').onclick = play;
     $('ardStop').onclick = stop;
     $('ardReconnect').onclick = detect;
-    $('ardSet').onclick = () => setMessage($('ardInput').value, curMode);
-    $('ardInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('ardSet').click(); });
-    document.querySelectorAll('#screen-arduino [data-amode]').forEach(t => {
-      t.onclick = () => {
-        curMode = t.dataset.amode;
-        document.querySelectorAll('#screen-arduino [data-amode]').forEach(x => x.classList.toggle('active', x === t));
-      };
-    });
     $('ardSpeed').oninput = function () {
       unit = +this.value; $('ardSpeedV').textContent = unit + 'ms'; renderMessage();
     };

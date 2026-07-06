@@ -30,7 +30,7 @@ const document = window.document;
 window.requestAnimationFrame = window.requestAnimationFrame || (cb => setTimeout(cb, 16));
 
 const order = ['js/morse-engine.js', 'data/stories.js', 'js/audio.js', 'js/morse-key.js',
-  'js/stats.js', 'js/story.js', 'js/telegraph.js', 'js/camera.js', 'js/arduino.js', 'js/app.js'];
+  'js/stats.js', 'js/story.js', 'js/camera.js', 'js/arduino.js', 'js/app.js'];
 const errors = [];
 window.addEventListener('error', e => errors.push('window error: ' + e.message));
 for (const f of order) {
@@ -64,6 +64,7 @@ try {
   click([...document.querySelectorAll('.opt-btn')].find(b => b.dataset.opt === '1'));
   check('해독 정답→응답카드', $('replyCard').style.display !== 'none');
   check('응답 키 위젯 생성', $('replyKeyHost').querySelector('.mk-key') !== null);
+  check('한 글자 지우기 버튼 있음', $('replyDel') !== null);
   check('응답에 수학 문제 표시', $('replyTarget').innerHTML.includes('math-q'));
   click($('replyCheck'));
   check('관용도(k) 도움 버튼', $('replyHelp') !== null);
@@ -87,7 +88,7 @@ try {
   check('m 영문+숫자 객관식 정답', $('replyCard').style.display !== 'none');
 
   // 확정 → 팔찌 → 아두이노 → 마무리, 통계 기록
-  window.Booth.confirmMessage('SOS', 'en', 'telegraph');
+  window.Booth.confirmMessage('SOS', 'en', 'camera');
   check('확정 후 팔찌 화면', $('screen-bracelet').classList.contains('active'));
   check('팔찌 비즈 배열 렌더', $('braceletView').innerHTML.includes('bead-big'));
   check('아두이노 메시지 전달(모스 표시)', $('ardMorse').textContent.length > 0);
@@ -97,10 +98,9 @@ try {
   check('신호확인→마무리 이동', $('screen-finish').classList.contains('active'));
   check('통계 기록됨(>=1)', JSON.parse(window.localStorage.getItem('gnmc_booth_msgs_v1') || '[]').length >= 1);
 
-  // 전신키
-  window.showScreen('telegraph');
-  check('전신키 참조표 생성', $('tgRef').children.length > 0);
-  check('전신키 키 위젯 생성', $('tgKeyHost').querySelector('.mk-key') !== null);
+  // ④전신키(자유연습) 화면 제거 확인
+  check('전신키 화면 제거됨', $('screen-telegraph') === null);
+  check('전신키 나비 제거됨', document.querySelector('[data-screen="telegraph"]') === null);
 } catch (e) { errors.push('RUNTIME: ' + e.message + '\n' + e.stack); }
 
 console.log(log.join('\n'));

@@ -30,11 +30,10 @@
     <button class="nav-btn active" data-screen="grade"><span class="step-no">1</span>학년</button>
     <button class="nav-btn" data-screen="story"><span class="step-no">2</span>이야기</button>
     <button class="nav-btn" data-screen="mission"><span class="step-no">3</span>미션</button>
-    <button class="nav-btn" data-screen="telegraph"><span class="step-no">4</span>전신키 <span class="ladder">· 추상</span></button>
-    <button class="nav-btn" data-screen="camera"><span class="step-no">5</span>카메라 <span class="ladder">· 반실물</span></button>
-    <button class="nav-btn" data-screen="bracelet"><span class="step-no">6</span>팔찌 <span class="ladder">· 실물</span></button>
-    <button class="nav-btn" data-screen="arduino"><span class="step-no">7</span>신호확인</button>
-    <button class="nav-btn" data-screen="finish"><span class="step-no">8</span>마무리</button>
+    <button class="nav-btn" data-screen="camera"><span class="step-no">4</span>카메라 <span class="ladder">· 반실물</span></button>
+    <button class="nav-btn" data-screen="bracelet"><span class="step-no">5</span>팔찌 <span class="ladder">· 실물</span></button>
+    <button class="nav-btn" data-screen="arduino"><span class="step-no">6</span>신호확인</button>
+    <button class="nav-btn" data-screen="finish"><span class="step-no">7</span>마무리</button>
     <button class="nav-btn nav-aux" data-screen="stats"><span class="step-no">∑</span>통계</button>
     <button class="btn sm" id="navReset" style="margin-left:auto">↺ 처음으로</button>
   </nav>
@@ -81,50 +80,7 @@
       <div class="mission-wrap" id="missionWrap"></div>
     </section>
 
-    <!-- ── ④ 전신키 ── -->
-    <section class="screen" id="screen-telegraph">
-      <div class="tg-grid">
-        <div>
-          <div class="card">
-            <div class="card-title">언어 선택</div>
-            <div class="mode-tabs" id="tgModeTabs">
-              <button class="mode-tab active" data-mode="en">영어 A–Z</button>
-              <button class="mode-tab" data-mode="ko">한글</button>
-              <button class="mode-tab" data-mode="num">숫자 0–9</button>
-              <button class="mode-tab" data-mode="sym">기호</button>
-            </div>
-          </div>
-          <div class="card" style="margin-top:16px">
-            <div class="card-title">전신키 — 짧게/길게 눌러 점·대시 만들기</div>
-            <div id="tgKeyHost"></div>
-          </div>
-          <div class="card" style="margin-top:16px">
-            <div class="card-title">해독된 메시지 <span style="display:flex;gap:8px"><button class="btn sm ok" id="tgSend"><img class="ic" src="assets/icons/play.svg" alt="" onerror="this.style.display='none'">신호로 보내기</button><button class="btn sm" id="tgSpace" style="display:none">띄어쓰기</button><button class="btn sm" id="tgClear">지우기</button></span></div>
-            <div class="decoded" id="tgDecoded"><span class="ph">여기에 해독 결과가 나타나요</span></div>
-          </div>
-          <div class="card" style="margin-top:16px">
-            <div class="card-title">도전! 이 단어를 보내보세요 <button class="btn sm" id="tgChBtn">시작</button></div>
-            <div id="tgChArea" style="text-align:center;color:var(--muted);font-size:14px;padding:6px">시작을 누르면 목표 단어가 나와요</div>
-          </div>
-        </div>
-        <div>
-          <div class="card">
-            <div class="card-title">
-              <span id="tgRefTitle">모스부호 표</span>
-              <button class="btn sm" id="tgSound"><img class="ic" id="tgSoundIc" src="assets/icons/sound.svg" alt="" onerror="this.style.display='none'"><span id="tgSoundTxt">소리 켜짐</span></button>
-            </div>
-            <div class="ref-grid en" id="tgRef"></div>
-          </div>
-          <div class="card" style="margin-top:16px">
-            <div class="card-title">누르는 속도 <span class="mono" id="tgSpeedV" style="color:var(--brand-deep)">200ms</span></div>
-            <input type="range" min="80" max="400" value="200" id="tgSpeed">
-            <div class="timing-labels"><span>빠르게</span><span>천천히</span></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── ⑤ 카메라 색 인식 ── -->
+    <!-- ── ④ 카메라 색 인식 ── -->
     <section class="screen" id="screen-camera">
       <div class="cam-grid">
         <div>
@@ -149,7 +105,8 @@
         </div>
         <div>
           <div class="card built-card">
-            <div class="card-title">내가 만든 메시지 — 한 글자씩 추가돼요</div>
+            <div class="card-title">내가 만든 메시지 <span id="camBuiltCount" style="color:var(--muted);font-weight:700;font-size:13px"></span></div>
+            <div class="built-hint" style="font-size:12px;color:var(--muted);margin-bottom:6px">이니셜(영문 <b>3자</b>) 또는 날짜(숫자 <b>4자</b>)까지 만들 수 있어요</div>
             <div class="built-text" id="camBuiltText"><span style="color:var(--muted);font-size:13px">아직 없음 — 첫 글자를 인식하고 ‘이 글자 추가’를 누르세요</span></div>
             <div class="bracelet-string" id="camBuiltBeads"></div>
             <div class="built-actions">
@@ -173,12 +130,12 @@
           </div>
           <div class="card" style="margin-top:16px">
             <div class="card-title">비즈 모양 안내</div>
-            <div class="calib-state" id="camCalibState"><b>둥근(짧은) 비즈 = 점(·)</b>, <b>긴 원통 비즈 = 대시(—)</b> — 모양(가로÷세로)으로 자동 구분돼요. <b>보정 필요 없음.</b> 어두운 트레이에 가로로 눕혀 놓으세요.</div>
+            <div class="calib-state" id="camCalibState"><b>둥근(짧은) 비즈 = 점(·)</b>, <b>긴 원통 비즈 = 대시(—)</b> — 모양(가로÷세로)으로 자동 구분돼요. <b>보정 필요 없음.</b> <b>갈색 모직판</b>(또는 어두운 트레이)에 가로로 눕혀 놓으면 인식이 잘 돼요.</div>
             <div class="mode-tabs" style="margin-top:12px">
               <span class="calib-state">모드:</span>
-              <button class="mode-tab active" data-cmode="en">영어</button>
-              <button class="mode-tab" data-cmode="ko">한글</button>
-              <button class="mode-tab" data-cmode="num">숫자</button>
+              <button class="mode-tab active" data-cmode="en">영어(이니셜 3자)</button>
+              <button class="mode-tab" data-cmode="ko">한글(3자)</button>
+              <button class="mode-tab" data-cmode="num">숫자(날짜 4자)</button>
             </div>
           </div>
         </div>
@@ -218,17 +175,8 @@
             </div>
           </div>
           <div class="card" style="margin-top:16px">
-            <div class="card-title">메시지 직접 입력 (또는 ④⑤에서 자동 전달)</div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-              <input id="ardInput" placeholder="예: SOS" maxlength="24"
-                     style="flex:1;min-width:160px;padding:12px 14px;border:2px solid var(--line);border-radius:var(--r-sm);font-size:18px;font-weight:700;font-family:var(--font-mono)">
-              <div class="mode-tabs">
-                <button class="mode-tab active" data-amode="en">영어</button>
-                <button class="mode-tab" data-amode="num">숫자</button>
-              </div>
-              <button class="btn ok" id="ardSet">설정</button>
-            </div>
-            <div class="cur-morse mono" id="ardMorse" style="font-size:22px;letter-spacing:6px;margin-top:14px"></div>
+            <div class="card-title">확정된 메시지 (③미션 답신·④카메라·⑤팔찌에서 자동 전달)</div>
+            <div class="cur-morse mono" id="ardMorse" style="font-size:22px;letter-spacing:6px;margin-top:6px"><span style="color:var(--muted);font-size:14px">앞 단계에서 만든 메시지가 여기에 모스로 표시돼요</span></div>
           </div>
           <div style="margin-top:16px"><button class="btn purple" id="ardNext">미션 마무리 →</button></div>
         </div>
@@ -283,7 +231,6 @@
 <script src="js/morse-key.js"></script>
 <script src="js/stats.js"></script>
 <script src="js/story.js"></script>
-<script src="js/telegraph.js"></script>
 <script src="js/camera.js"></script>
 <script src="js/arduino.js"></script>
 <script src="js/app.js"></script>
