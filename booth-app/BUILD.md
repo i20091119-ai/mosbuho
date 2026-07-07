@@ -25,15 +25,17 @@ bash ~/mosbuho/booth-app/deploy/setup-unoq.sh
 3. 나중에 코드가 바뀌면: `bash ~/mosbuho/booth-app/deploy/update-applab.sh` → App Lab **Stop → Run**.
 
 ### ③ 결선 (UNO Q Arduino 헤더) — 상세는 HARDWARE_SETUP.md
+**이 부스 구성은 선 2가닥이면 끝** (버튼 LED 미사용 → ULN2003·12V 어댑터 불필요):
+
 | 핀 | 연결 |
 |---|---|
-| **D2** | 수동(passive) 부저 (+) / GND(−) |
+| **D2** | 수동(passive) 부저 (+) / GND(−)  ← 직결(드라이버 불필요) |
 | **D3** | 전신기(또는 아케이드 버튼) 스위치 NO / COM→GND (INPUT_PULLUP) |
-| **D4** | 버튼 LED → ULN2003 IN1 →(OUT1)→ LED(−), LED(+)→+5V |
-| **GND** | 부저−, ULN2003−, (전원)− **공통 그라운드 필수** |
+| **GND** | 부저(−) + 버튼 COM 을 GND 한 점에 **공통** |
 
-주변장치: **웹캠 → 허브 USB-A**, **모니터 HDMI**, **스피커 3.5mm**, 입력장치(아래 터치 참고).
-LED 전원은 **5V 직결로 충분**(12V 어댑터 불필요).
+> (선택) 버튼 불빛을 쓰려면 **D4 → ULN2003 IN1 →(OUT1)→ LED(−), LED(+)→+5V**. 안 쓰면 D4·ULN2003·12V 전부 생략(코드 수정 불필요, 보드 내장 LED 로 누름 표시).
+
+주변장치: **웹캠 → 허브 USB-A**, **모니터 HDMI**, **스피커 3.5mm**, 입력장치(트랙볼 — 아래 터치 참고).
 
 ### ④ 점검
 - [ ] 전원만 켜면 **키오스크(전체화면)** 로 자동 실행 (가만 둬도 화면 안 꺼짐)
