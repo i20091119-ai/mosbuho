@@ -77,14 +77,16 @@
   // 빛 신호 재생 (LED 점멸 + 부저) — buildPlaybackSequence 사용
   function playSignal(morse, ledEl, unit) {
     unit = unit || 150;
-    // 해독 신호를 실물 부저로도 재생(브리지 있을 때만; 없으면 화면 WebAudio 만).
-    if (global.Arduino && global.Arduino.playOnBuzzer) global.Arduino.playOnBuzzer(morse, unit);
+    // 해독 신호를 실물 부저로 재생. 부저로 나가면(onBuzzer) 화면 스피커음은 생략해
+    // '삑삑'이 두 번 겹치지 않게 함. 부저 없으면 화면 WebAudio 로 재생.
+    // (※ 이 스킵은 '신호 재생'에만 적용 — 답신 전신키 삑소리는 스피커에서 계속 남)
+    const onBuzzer = !!(global.Arduino && global.Arduino.playOnBuzzer && global.Arduino.playOnBuzzer(morse, unit));
     const seq = M.buildPlaybackSequence(morse, unit);
     let t = 0;
     seq.forEach(e => {
       if (e.on) {
-        setTimeout(() => { ledEl.classList.add('on'); if (soundOn && global.CWAudio) global.CWAudio.on(); }, t);
-        setTimeout(() => { ledEl.classList.remove('on'); if (global.CWAudio) global.CWAudio.off(); }, t + e.ms);
+        setTimeout(() => { ledEl.classList.add('on'); if (!onBuzzer && soundOn && global.CWAudio) global.CWAudio.on(); }, t);
+        setTimeout(() => { ledEl.classList.remove('on'); if (!onBuzzer && global.CWAudio) global.CWAudio.off(); }, t + e.ms);
       }
       t += e.ms;
     });

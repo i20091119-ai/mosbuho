@@ -35,20 +35,20 @@
       clearTimeout(to);
       hwOk = r.ok;
       if (hwOk) connectKeyStream();
-      // 부저 연결 시 화면 스피커음 끔(미션 소리 = 부저 전용). 없으면 WebAudio 폴백.
-      if (global.CWAudio && global.CWAudio.setMuted) global.CWAudio.setMuted(hwOk);
-    } catch (e) { hwOk = false; if (global.CWAudio && global.CWAudio.setMuted) global.CWAudio.setMuted(false); }
+    } catch (e) { hwOk = false; /* 브리지 없음 → 폴백 */ }
   }
 
-  // 모스 문자열을 부저(+MCU LED)로 재생. 브리지 있을 때만 전송(없으면 조용히 폴백).
+  // 모스 문자열을 부저(+MCU LED)로 재생. 브리지 있을 때만 전송.
+  // 반환값: 부저로 보냈으면 true → 호출부(신호 재생)가 스피커 중복음을 끌 수 있음.
   function playOnBuzzer(morse, unit) {
-    if (!hwOk || !morse) return;
+    if (!hwOk || !morse) return false;
     try {
       fetch(BRIDGE + '/play', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ morse: String(morse), unit: Math.round(unit || 150) })
       }).catch(() => {});
-    } catch (e) { /* 무시 */ }
+      return true;
+    } catch (e) { return false; }
   }
 
   function init() { detect(); }
