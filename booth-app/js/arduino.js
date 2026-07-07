@@ -51,7 +51,12 @@
     } catch (e) { return false; }
   }
 
-  function init() { detect(); }
+  function init() {
+    detect();
+    // App Lab 브리지(도커)는 부팅 시 브라우저보다 늦게 뜰 수 있음 → 주기적으로 재감지.
+    // 연결되면 hwOk=true 로 유지되고, 브리지가 재시작돼도 자동으로 다시 잡힌다.
+    setInterval(detect, 4000);
+  }
 
-  global.Arduino = { init, playOnBuzzer };
+  global.Arduino = { init, playOnBuzzer, isHw: () => hwOk };
 })(window);
