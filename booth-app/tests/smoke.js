@@ -87,20 +87,22 @@ try {
   click([...document.querySelectorAll('.opt-btn')].find(b => b.dataset.opt === 'B7'));
   check('m 영문+숫자 객관식 정답', $('replyCard').style.display !== 'none');
 
-  // 확정 → 팔찌 → 아두이노 → 마무리, 통계 기록
+  // 확정 → 팔찌 → 마무리 (⑥신호확인·통계 삭제), 기록은 localStorage 에만 보관
   window.Booth.confirmMessage('SOS', 'en', 'camera');
   check('확정 후 팔찌 화면', $('screen-bracelet').classList.contains('active'));
   check('팔찌 비즈 배열 렌더', $('braceletView').innerHTML.includes('bead-big'));
-  check('아두이노 메시지 전달(모스 표시)', $('ardMorse').textContent.length > 0);
   click($('braceletNext'));
-  check('팔찌→신호확인 이동', $('screen-arduino').classList.contains('active'));
-  click($('ardNext'));
-  check('신호확인→마무리 이동', $('screen-finish').classList.contains('active'));
-  check('통계 기록됨(>=1)', JSON.parse(window.localStorage.getItem('gnmc_booth_msgs_v1') || '[]').length >= 1);
+  check('팔찌→마무리 바로 이동', $('screen-finish').classList.contains('active'));
+  check('메시지 기록 보관(>=1)', JSON.parse(window.localStorage.getItem('gnmc_booth_msgs_v1') || '[]').length >= 1);
 
-  // ④전신키(자유연습) 화면 제거 확인
+  // 제거된 화면/네비 확인
   check('전신키 화면 제거됨', $('screen-telegraph') === null);
-  check('전신키 나비 제거됨', document.querySelector('[data-screen="telegraph"]') === null);
+  check('신호확인 화면 제거됨', $('screen-arduino') === null);
+  check('통계 화면 제거됨', $('screen-stats') === null);
+  check('신호확인·통계 나비 제거됨',
+    document.querySelector('[data-screen="arduino"]') === null &&
+    document.querySelector('[data-screen="stats"]') === null);
+  check('마무리 나비 = 6', document.querySelector('[data-screen="finish"] .step-no').textContent === '6');
 } catch (e) { errors.push('RUNTIME: ' + e.message + '\n' + e.stack); }
 
 console.log(log.join('\n'));

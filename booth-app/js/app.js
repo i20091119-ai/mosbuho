@@ -1,7 +1,7 @@
 /* ============================================================================
  * app.js — 셸: 화면 전환 · 흐름 제어 · 공통 메시지 버스 · 팔찌 안내 · 리셋
  * ----------------------------------------------------------------------------
- * 가이드 흐름: ①학년 → ②이야기 → ③미션(해독+답신) → ④카메라 → ⑤팔찌 → ⑥신호확인 → ⑦마무리
+ * 가이드 흐름: ①학년 → ②이야기 → ③미션(해독+답신) → ④카메라 → ⑤팔찌 → ⑥마무리
  * 시차 운영을 위해 상단 네비로 자유 이동 가능. "처음으로"로 명확히 리셋.
  * ==========================================================================*/
 (function (global) {
@@ -13,7 +13,7 @@
     grade: null, mode: 'en', lastMessage: null,
     _listeners: [],
     onMessage(cb) { this._listeners.push(cb); },
-    // ③미션 답신/④카메라에서 확정한 메시지 → 팔찌 안내 + 통계 + 아두이노 전달
+    // ③미션 답신/④카메라에서 확정한 메시지 → 팔찌 안내(+ 통계 기록)
     confirmMessage(text, mode, source) {
       text = (text || '').trim(); if (!text) return;
       const morse = M.textToMorse(text, mode);
@@ -125,16 +125,13 @@
   // ── 부팅 ──
   function boot() {
     buildMotif();
-    if (global.Stats) global.Stats.init();
     if (global.Story) global.Story.init();
     if (global.Camera) global.Camera.init();
-    if (global.Arduino) global.Arduino.init();
+    if (global.Arduino) global.Arduino.init();   // 물리 버튼(전신기) → 미션 답신 브리지만 담당
 
-    // 흐름 이동 버튼
+    // 흐름 이동 버튼: 팔찌 → 마무리 (⑥신호확인 삭제됨)
     const bn = document.getElementById('braceletNext');
-    if (bn) bn.onclick = () => showScreen('arduino');
-    const an = document.getElementById('ardNext');
-    if (an) an.onclick = () => showScreen('finish');
+    if (bn) bn.onclick = () => showScreen('finish');
 
     // 직접 네비 점프 대비 onShow 핸들러
     if (global.Story) {

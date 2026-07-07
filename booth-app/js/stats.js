@@ -38,8 +38,9 @@
 
   // ── 기록 ───────────────────────────────────────────────────────────────
   function record(rec) {
-    store.save(rec);
-    if (document.getElementById('screen-stats').classList.contains('active')) refresh();
+    store.save(rec);   // 통계 화면은 제거됨 — 기록만 조용히 보관(추후 활용 대비)
+    const ss = document.getElementById('screen-stats');
+    if (ss && ss.classList.contains('active')) refresh();
   }
 
   // ── 집계 ───────────────────────────────────────────────────────────────
