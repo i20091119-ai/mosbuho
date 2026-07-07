@@ -18,11 +18,25 @@ bash ~/mosbuho/booth-app/deploy/setup-unoq.sh
 이 한 번으로 **자동** 처리: 한글·이모지 폰트 · 자동 로그인 · 부팅 시 **키오스크 자동실행** · 화면 재인식 · **절전/화면꺼짐 차단**.
 (부분만 끄려면 `NO_AUTOLOGIN=1` `NO_AUTOSTART=1` `NO_POWERFIX=1` 등 앞에 붙임)
 
-### ② App Lab 브리지 등록 — 부저·버튼 (한 대당 1회, 수동)
-`arduino/` 앱이 **부저 재생 + 아케이드 버튼 입력**을 담당합니다.
-1. **Arduino App Lab** 실행 → `~/mosbuho/booth-app/arduino/` 를 **앱으로 Import**.
-2. **Run** 눌러 정상 동작 확인 → **"Run as startup"(기본 앱)** 으로 지정(부팅 시 자동 실행).
-3. 나중에 코드가 바뀌면: `bash ~/mosbuho/booth-app/deploy/update-applab.sh` → App Lab **Stop → Run**.
+### ② App Lab 브리지 등록 — 부저·버튼 (한 대당 1회)
+`arduino/` 앱이 **부저 재생 + 아케이드 버튼 입력**을 담당. 아래 **CLI 방법(권장, 빠름)** 또는 GUI.
+
+**CLI (터미널) — 4줄:**
+```bash
+arduino-app-cli install ~/mosbuho/booth-app/arduino     # ① App Lab에 설치(임포트)
+arduino-app-cli list                                    # ② 설치된 앱 이름 확인
+arduino-app-cli run <위목록의-앱이름>                    # ③ 실행해 부저·버튼 확인
+arduino-app-cli properties set default user:<앱이름>     # ④ 부팅 시 자동 실행(기본 앱)
+```
+확인: `curl -s http://localhost:8080/status ; echo` → `{"hw": true/false}` 나오면 브리지 살아있음.
+
+**GUI (App Lab 화면):**
+1. `arduino/` 를 zip으로: `cd ~/mosbuho/booth-app && zip -r ~/morse-booth.zip arduino`
+2. App Lab → **My Apps** → **Import** → `~/morse-booth.zip` 선택.
+3. 앱 열고 오른쪽 위 **Run** → 부저·버튼 확인.
+4. Run 옆 **▼ → "Run at startup" ON** → 앱 이름 옆 **DEFAULT** 배지 뜨면 완료.
+
+> 나중에 코드가 바뀌면: `bash ~/mosbuho/booth-app/deploy/update-applab.sh` → `arduino-app-cli stop && arduino-app-cli run <앱이름>`(또는 App Lab Stop→Run).
 
 ### ③ 결선 (UNO Q Arduino 헤더) — 상세는 HARDWARE_SETUP.md
 **이 부스 구성은 선 2가닥이면 끝** (버튼 LED 미사용 → ULN2003·12V 어댑터 불필요):
