@@ -1,17 +1,19 @@
 /* ============================================================================
- * arduino.js — 물리 전신키(아케이드 버튼) 입력 브리지  (⑥신호확인 화면은 제거됨)
+ * arduino.js — UNO Q Python 브리지 연동 (⑥신호확인 화면은 제거됨)
  * ----------------------------------------------------------------------------
- * 역할이 하나로 축소됨: UNO Q Python 브리지(localhost:8080)의 /keys SSE 를 구독해
- * 아케이드 버튼 누름/뗌을 문서 이벤트 'mk-down'/'mk-up' 으로 흘려보낸다.
- * → ③미션 답신의 전신키 위젯(morse-key.js)이 키보드 스페이스바와 동일하게 받는다.
+ * 남은 두 가지 역할:
+ *   1) 입력: /keys SSE 구독 → 아케이드 버튼 누름/뗌을 'mk-down'/'mk-up' 문서
+ *      이벤트로 흘려보냄 → ③미션 답신 전신키(morse-key.js)가 키보드처럼 받음.
+ *   2) 출력: playOnBuzzer(morse, unit) → POST /play → MCU play_morse 로 부저·LED
+ *      재생. ③미션 '신호 다시 보기'가 이걸 호출해 해독 신호를 부저로 들려준다.
  *
- * (LED·부저 재생, 연결 표시 등 ⑥ 화면 기능은 신호확인 단계 삭제로 함께 제거)
- * 브리지에 못 닿아도 조용히 무시 — 화면 키/스페이스바로 폴백되어 체험은 안 멈춤.
+ * 브리지에 못 닿으면 조용히 무시(hwOk=false) — 화면 키/스페이스바·WebAudio 로 폴백.
  * ==========================================================================*/
 (function (global) {
   'use strict';
   const BRIDGE = 'http://localhost:8080';
   let keyES = null;
+  let hwOk = false;   // 브리지(하드웨어) 연결 여부
 
   function connectKeyStream() {
     if (keyES || typeof EventSource === 'undefined') return;
@@ -31,11 +33,23 @@
       const to = setTimeout(() => ctrl.abort(), 1200);
       const r = await fetch(BRIDGE + '/status', { signal: ctrl.signal });
       clearTimeout(to);
-      if (r.ok) connectKeyStream();   // 브리지 있으면 버튼 이벤트 구독
-    } catch (e) { /* 브리지 없음 → 화면 키/스페이스바 폴백 */ }
+      hwOk = r.ok;
+      if (hwOk) connectKeyStream();
+    } catch (e) { hwOk = false; /* 브리지 없음 → 폴백 */ }
+  }
+
+  // 모스 문자열을 부저(+MCU LED)로 재생. 브리지 있을 때만 전송(없으면 조용히 폴백).
+  function playOnBuzzer(morse, unit) {
+    if (!hwOk || !morse) return;
+    try {
+      fetch(BRIDGE + '/play', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ morse: String(morse), unit: Math.round(unit || 150) })
+      }).catch(() => {});
+    } catch (e) { /* 무시 */ }
   }
 
   function init() { detect(); }
 
-  global.Arduino = { init };
+  global.Arduino = { init, playOnBuzzer };
 })(window);

@@ -63,6 +63,8 @@
   // 빛 신호 재생 (LED 점멸 + 부저) — buildPlaybackSequence 사용
   function playSignal(morse, ledEl, unit) {
     unit = unit || 150;
+    // 해독 신호를 실물 부저로도 재생(브리지 있을 때만; 없으면 화면 WebAudio 만).
+    if (global.Arduino && global.Arduino.playOnBuzzer) global.Arduino.playOnBuzzer(morse, unit);
     const seq = M.buildPlaybackSequence(morse, unit);
     let t = 0;
     seq.forEach(e => {
