@@ -61,7 +61,8 @@ try {
   check('미션 화면', $('screen-mission').classList.contains('active'));
   check('해독 객관식 3개', document.querySelectorAll('.opt-btn').length === 3);
   check('신호 도형 렌더', /m-dot|m-dash/.test($('signalShapes').innerHTML));
-  click([...document.querySelectorAll('.opt-btn')].find(b => b.dataset.opt === '1'));
+  check('해독 문제 랜덤 풀에서 선정', ['1', '3', '4', '6', '8'].includes(window.Story._answer()));
+  click([...document.querySelectorAll('.opt-btn')].find(b => b.dataset.opt === window.Story._answer()));
   check('해독 정답→응답카드', $('replyCard').style.display !== 'none');
   check('응답 키 위젯 생성', $('replyKeyHost').querySelector('.mk-key') !== null);
   check('한 글자 지우기 버튼 있음', $('replyDel') !== null);
@@ -76,7 +77,7 @@ try {
   click([...document.querySelectorAll('.grade-card')].find(c => c.dataset.grade === 'e'));
   click($('storyNext')); click($('storyNext'));
   check('e 해독 객관식 보기', document.querySelectorAll('.opt-btn').length >= 2);
-  click([...document.querySelectorAll('.opt-btn')].find(b => b.dataset.opt === 'WATER'));
+  click([...document.querySelectorAll('.opt-btn')].find(b => b.dataset.opt === window.Story._answer()));
   check('e 객관식 정답 선택', $('replyCard').style.display !== 'none');
 
   // 중·고(m): 한글 — 객관식 (키보드 타이핑 없음)
@@ -84,7 +85,7 @@ try {
   click([...document.querySelectorAll('.grade-card')].find(c => c.dataset.grade === 'm'));
   click($('storyNext')); click($('storyNext'));
   check('m 해독 객관식 보기', document.querySelectorAll('.opt-btn').length >= 2);
-  click([...document.querySelectorAll('.opt-btn')].find(b => b.dataset.opt === 'B7'));
+  click([...document.querySelectorAll('.opt-btn')].find(b => b.dataset.opt === window.Story._answer()));
   check('m 영문+숫자 객관식 정답', $('replyCard').style.display !== 'none');
 
   // 확정 → 팔찌 → 마무리 (⑥신호확인·통계 삭제), 기록은 localStorage 에만 보관

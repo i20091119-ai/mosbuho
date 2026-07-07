@@ -10,6 +10,9 @@
 
   let ctx = null;
   let active = null; // 현재 울리는 톤 노드
+  let muted = false; // 실물 부저가 연결되면 true → 화면 스피커음 끔(미션 소리 부저 전용)
+
+  function setMuted(v) { muted = !!v; if (muted) off(); }
 
   function ensure() {
     if (!ctx) ctx = new (global.AudioContext || global.webkitAudioContext)();
@@ -19,6 +22,7 @@
 
   // 톤 시작 (수동 on/off — 전신키처럼 누르는 동안 지속)
   function on() {
+    if (muted) return;   // 부저 연결 시 스피커음 억제
     ensure();
     if (active) return;
     const t = ctx.currentTime;
@@ -49,5 +53,5 @@
     setTimeout(off, durMs);
   }
 
-  global.CWAudio = { ensure, on, off, beep };
+  global.CWAudio = { ensure, on, off, beep, setMuted };
 })(window);

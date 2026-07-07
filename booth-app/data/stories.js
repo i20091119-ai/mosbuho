@@ -37,10 +37,16 @@ window.STORIES = {
     ],
     decode: {
       prompt: '삐삐가 빛으로 신호를 보냈어요. 몇 번 우주선일까요?',
-      answer: '1',                 // ← 해독 정답(숫자)
-      options: ['1', '5', '9'],    // ← 객관식 보기
       hint: false,
-      npc: '맞아요! 저는 1번 우주선이에요. 엄마 별로 가는 길 번호를 수학으로 구해서 알려주세요!'
+      // 매번 무작위 출제(반복 관람 대비) — 한 자리 우주선 번호
+      pool: [
+        { answer: '1', options: ['1', '5', '9'] },
+        { answer: '3', options: ['3', '7', '2'] },
+        { answer: '4', options: ['4', '8', '6'] },
+        { answer: '6', options: ['6', '2', '9'] },
+        { answer: '8', options: ['8', '5', '3'] }
+      ],
+      npc: '맞아요! 저는 {a}번 우주선이에요. 엄마 별로 가는 길 번호를 수학으로 구해서 알려주세요!'
     },
     reply: {
       prompt: '삐삐가 갈 길 번호를 수학으로 구해서 전신키로 보내요!',
@@ -66,17 +72,22 @@ window.STORIES = {
     mode: 'alnum',
     dir: 'e',
     story: [
-      { img: 'e_01_distress.png', text: '경남 스페이스센터, 응답하라.\n여기는 달 뒷면 ‘고요의 바다 기지’.\n물 공급 장치가 멈췄다. 통신 장비도 망가져 빛 신호만 보낼 수 있다.\n우리 메시지를 해독해 달라. 부탁한다.' },
+      { img: 'e_01_distress.png', text: '경남 스페이스센터, 응답하라.\n여기는 달 뒷면 ‘고요의 바다 기지’.\n생명유지 물자가 바닥났다. 통신 장비도 망가져 빛 신호만 보낼 수 있다.\n우리 메시지를 해독해 달라. 부탁한다.' },
       { img: 'e_02_signal.png', text: '기지에서 빛 신호가 도착했다.\n무슨 단어일까? 한 글자씩 천천히 풀어보자.' },
       { img: 'e_03_reply.png', text: '기지에서 환호성이 들린다.\n“고맙다, 스페이스센터! 보급선이 도착했다!”' },
       { img: 'e_04_resolved.png', text: '모두가 무사하다. 교신 성공!' }
     ],
     decode: {
       prompt: '기지가 보낸 신호를 해독하라. 무엇이 필요할까?',
-      answer: 'WATER',                       // ← 해독 정답
-      options: ['WATER', 'FUEL', 'AIR'],     // ← 객관식 보기(정답 포함)
       hint: true,                            // 글자 구분 힌트 토글 허용
-      npc: '그렇다! 우리에게 필요한 건 WATER(물)다. 보급선을 보내달라!'
+      // 매번 무작위 출제 — 기지에 필요한 물자(영단어)
+      pool: [
+        { answer: 'WATER',  options: ['WATER', 'FUEL', 'AIR'] },
+        { answer: 'FUEL',   options: ['FUEL', 'WATER', 'AIR'] },
+        { answer: 'AIR',    options: ['AIR', 'OXYGEN', 'FUEL'] },
+        { answer: 'OXYGEN', options: ['OXYGEN', 'WATER', 'AIR'] }
+      ],
+      npc: '그렇다! 우리에게 필요한 건 {a} 이다. 보급선을 보내달라!'
     },
     reply: {
       prompt: "문제를 풀어 'OK' 뒤에 보급선 번호를 붙여 보내라.",
@@ -109,10 +120,16 @@ window.STORIES = {
     ],
     decode: {
       prompt: '아라호가 보낸 좌표 신호를 해독하라. (영문+숫자)',
-      answer: 'B7',                       // ← 해독 정답(좌표: 영문+숫자)
-      options: ['B7', 'D9', 'K3'],        // ← 객관식 보기
       hint: true,                         // 글자 구분 힌트 허용
-      npc: '좌표 B7 수신! 구조대에 전달한다.'
+      // 매번 무작위 출제 — 구조 좌표(영문+숫자)
+      pool: [
+        { answer: 'B7', options: ['B7', 'D9', 'K3'] },
+        { answer: 'D9', options: ['D9', 'B7', 'K3'] },
+        { answer: 'K3', options: ['K3', 'A1', 'M8'] },
+        { answer: 'A5', options: ['A5', 'C2', 'B7'] },
+        { answer: 'F4', options: ['F4', 'H6', 'J2'] }
+      ],
+      npc: '좌표 {a} 수신! 구조대에 전달한다.'
     },
     reply: {
       prompt: "문제를 풀어 'GO' 뒤에 좌표 거리를 붙여 보내라.",

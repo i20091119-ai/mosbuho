@@ -21,6 +21,20 @@
   let decodeOk = false, decodeTries = 0, replyTries = 0;
   let replyKey = null, replyText = '', replyComposer = null, replyAnswer = '', replyMathA = '';
   let lastMathQ = '';   // 직전 출제 문제(연속 중복 회피)
+  let curDecode = null; // 이번 미션에서 선정된 해독 문제 {answer, options, hint, npc}
+  let lastDecodeA = ''; // 직전 해독 정답(연속 중복 회피)
+
+  // 해독 문제 선택: pool 있으면 랜덤(직전과 다르게), 없으면 decode 자체 사용. npc의 {a}=정답 치환.
+  function pickDecode(d) {
+    let v = d;
+    if (d.pool && d.pool.length) {
+      let tries = 0;
+      do { v = d.pool[Math.floor(Math.random() * d.pool.length)]; tries++; }
+      while (d.pool.length > 1 && v.answer === lastDecodeA && tries < 10);
+      lastDecodeA = v.answer;
+    }
+    return { answer: v.answer, options: v.options, hint: d.hint, npc: (d.npc || '').replace('{a}', v.answer) };
+  }
 
   // 수학 문제 선택: 배열이면 랜덤(직전과 다르게), 단일 객체면 그대로
   function pickMath(m) {
@@ -145,13 +159,14 @@
   function buildMission() {
     decodeOk = false; decodeTries = 0; replyTries = 0; hintOn = false;
     replyText = ''; replyComposer = new M.HangulComposer();
-    const decodeMorse = M.textToMorse(data.decode.answer, data.mode);
+    curDecode = pickDecode(data.decode);   // 매번 무작위 해독 문제 선정
+    const decodeMorse = M.textToMorse(curDecode.answer, data.mode);
     const wrap = $('missionWrap');
 
     // 해독 카드
     let decodeInput = '';
-    if (data.decode.options) {
-      decodeInput = `<div class="opt-row">${shuffleArr(data.decode.options).map(o =>
+    if (curDecode.options) {
+      decodeInput = `<div class="opt-row">${shuffleArr(curDecode.options).map(o =>
         `<button class="opt-btn" data-opt="${o}">${o}</button>`).join('')}</div>`;
     } else {
       decodeInput = `<div class="decode-typein">
@@ -159,7 +174,7 @@
                style="padding:12px 14px;border:2px solid var(--line);border-radius:var(--r-sm);font-size:20px;font-weight:800;flex:1;min-width:140px;text-align:center">
         <button class="btn ok" id="decodeCheck">확인</button></div>`;
     }
-    const hintBtn = data.decode.hint ? `<button class="btn sm" id="hintBtn">글자 구분 힌트</button>` : '';
+    const hintBtn = curDecode.hint ? `<button class="btn sm" id="hintBtn">글자 구분 힌트</button>` : '';
 
     wrap.innerHTML = `
       <div class="card mission-card" id="decodeCard">
@@ -192,9 +207,9 @@
     setTimeout(() => playSignal(decodeMorse, led), 400);
     $('signalPlay').onclick = () => playSignal(decodeMorse, led);
 
-    if (data.decode.hint) $('hintBtn').onclick = () => { hintOn = !hintOn; renderSignalShapes(decodeMorse, hintOn); };
+    if (curDecode.hint) $('hintBtn').onclick = () => { hintOn = !hintOn; renderSignalShapes(decodeMorse, hintOn); };
 
-    if (data.decode.options) {
+    if (curDecode.options) {
       wrap.querySelectorAll('.opt-btn').forEach(b => b.onclick = () => checkDecode(b.dataset.opt));
     } else {
       $('decodeCheck').onclick = () => checkDecode($('decodeInput').value);
@@ -216,11 +231,11 @@
   function norm(s) { return (s || '').trim().toUpperCase().replace(/\s+/g, ''); }
 
   function checkDecode(val) {
-    const ok = norm(val) === norm(data.decode.answer);
+    const ok = norm(val) === norm(curDecode.answer);
     const fb = $('decodeFb');
     if (ok) {
       decodeOk = true;
-      fb.className = 'mission-feedback ok'; fb.textContent = data.decode.npc;
+      fb.className = 'mission-feedback ok'; fb.textContent = curDecode.npc;
       openReply();
     } else {
       decodeTries++;
@@ -228,7 +243,7 @@
       fb.textContent = '다시 한 번! 신호를 한 글자씩 천천히 풀어보자.';
       if (decodeTries >= maxTries()) {
         fb.innerHTML += ` <button class="btn sm purple" id="decodeHelp">정답 보고 계속</button>`;
-        $('decodeHelp').onclick = () => { decodeOk = true; fb.className = 'mission-feedback ok'; fb.textContent = data.decode.npc; openReply(); };
+        $('decodeHelp').onclick = () => { decodeOk = true; fb.className = 'mission-feedback ok'; fb.textContent = curDecode.npc; openReply(); };
       }
     }
   }
@@ -364,5 +379,5 @@
   function onShowMission() { if (!data) { $('missionWrap').innerHTML = needGradeHTML(); } else if (!$('missionWrap').querySelector('.mission-card')) buildMission(); }
   function onShowFinish() { if (!data) { $('finishWrap').innerHTML = needGradeHTML(); } else buildFinish(); }
 
-  global.Story = { init, reset, setSound, getGrade: () => grade, onShowStory, onShowMission, onShowFinish };
+  global.Story = { init, reset, setSound, getGrade: () => grade, onShowStory, onShowMission, onShowFinish, _answer: () => curDecode && curDecode.answer };
 })(window);

@@ -35,7 +35,9 @@
       clearTimeout(to);
       hwOk = r.ok;
       if (hwOk) connectKeyStream();
-    } catch (e) { hwOk = false; /* 브리지 없음 → 폴백 */ }
+      // 부저 연결 시 화면 스피커음 끔(미션 소리 = 부저 전용). 없으면 WebAudio 폴백.
+      if (global.CWAudio && global.CWAudio.setMuted) global.CWAudio.setMuted(hwOk);
+    } catch (e) { hwOk = false; if (global.CWAudio && global.CWAudio.setMuted) global.CWAudio.setMuted(false); }
   }
 
   // 모스 문자열을 부저(+MCU LED)로 재생. 브리지 있을 때만 전송(없으면 조용히 폴백).
