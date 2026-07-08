@@ -195,7 +195,10 @@
         <div class="mission-prompt" id="replyPrompt"></div>
         <div class="reply-target" id="replyTarget"></div>
         <div id="replyKeyHost"></div>
-        <div class="reply-decoded">보낸 내용: <b id="replyDecodedText">—</b></div>
+        <div class="reply-decoded">
+          <span class="reply-decoded-label">지금 보낸 내용</span>
+          <b id="replyDecodedText" class="reply-decoded-text">—</b>
+        </div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button class="btn ok" id="replyCheck">확인</button>
           <button class="btn sm" id="replyDel">← 한 글자 지우기</button>

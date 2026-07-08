@@ -415,8 +415,21 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
 .mission-feedback.ok { color: var(--ok); }
 .mission-feedback.bad { color: var(--c-red); }
 .reply-target { font-size: 16px; margin-bottom: 12px; padding: 10px 14px; background: var(--paper); border-radius: var(--r-sm); }
-.reply-decoded { margin-top: 12px; font-size: 18px; }
-.reply-decoded b { font-family: var(--font-mono); color: var(--brand-deep); }
+/* 답신 입력 결과 — 크고 잘 보이게(전신키로 만든 글자가 여기 쌓임) */
+.reply-decoded {
+  margin-top: 14px; padding: 16px 22px;
+  background: var(--paper); border: 3px solid var(--brand);
+  border-radius: var(--r-md); display: flex; flex-direction: column; gap: 6px;
+}
+.reply-decoded-label {
+  font-size: 13px; font-weight: 800; color: var(--muted);
+  letter-spacing: .06em; text-transform: none;
+}
+.reply-decoded-text {
+  font-family: var(--font-mono); color: var(--brand-deep);
+  font-size: clamp(38px, 6.5vw, 60px); font-weight: 800; line-height: 1.05;
+  letter-spacing: .08em; word-break: break-all; min-height: 1.05em;
+}
 
 /* ════════════════ 팔찌 ════════════════ */
 .bracelet-msg { font-size: 18px; margin-bottom: 14px; }
