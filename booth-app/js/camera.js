@@ -41,7 +41,7 @@
   let stableCount = 0, pending = '';
   let confirmedText = '', confirmedMorse = '';
   let built = [];        // 한 글자씩 누적: [{ text, morse }]  → 팔찌 만들기
-  const MAXLEN = { en: 3, ko: 3, num: 4 };   // 이니셜(영/한 3자)·날짜(숫자 4자)
+  const MAXLEN = { en: 4, ko: 4, num: 4 };   // 영/한/숫자 모두 최대 4자
   function capOf() { return MAXLEN[cmode] || 4; }
   function atCap() { return built.length >= capOf(); }
 
@@ -289,7 +289,7 @@
   // 흐름: ① 한 글자 비즈를 카메라에 → 인식 → ② '이 글자 추가' → 팔찌에 실물로 꿰기 → 반복
   function addCurrent() {
     if (!confirmedText) return;
-    if (atCap()) return;       // 이니셜 3자 / 날짜 4자 초과 방지
+    if (atCap()) return;       // 최대 4자 초과 방지
     built.push({ text: confirmedText, morse: confirmedMorse });
     renderBuilt();
     resetRecognition();        // 다음 글자를 놓을 수 있게 현재 인식 비움
