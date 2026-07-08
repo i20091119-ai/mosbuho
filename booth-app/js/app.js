@@ -109,7 +109,7 @@
     }
     const beads = morseToBeadsHTML(msg.morse);
     host.innerHTML = `
-      <div class="bracelet-msg">내 메시지: <b>${escapeHtml(msg.text)}</b> <span class="mono" style="color:var(--muted)">(${M.morseToGlyphs(msg.morse.replace(/ /g,'  ').replace(/\//g,' / '))})</span></div>
+      <div class="bracelet-msg">내 메시지: <b>${escapeHtml(msg.text)}</b></div>
       <div class="bracelet-string">${beads}</div>
       <p style="color:var(--ink-soft);margin-top:12px">왼쪽부터 순서대로 끈에 꿰어요. <b>짧은 비즈=점</b>, <b>긴 비즈=대시</b>. <b>색은 자유! 길이로 구분해요.</b> 글자는 카메라에서 한 글자씩 만들어 모은 거예요 — 화면 순서 그대로 꿰면 돼요!</p>`;
   }

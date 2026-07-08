@@ -408,7 +408,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
 .sig-letter { padding: 6px 10px; border-radius: 8px; background: #fff; border: 1px solid var(--line); }
 .sig-gap { width: 18px; }
 .opt-row { display: flex; gap: 12px; flex-wrap: wrap; }
-.opt-btn { flex: 1; min-width: 90px; padding: 22px; font-size: 32px; font-weight: 800; font-family: var(--font-mono); border: 3px solid var(--line); border-radius: var(--r-md); background: var(--card); cursor: pointer; transition: all .12s; }
+.opt-btn { flex: 1 1 0; min-width: 88px; max-width: 100%; box-sizing: border-box; padding: 20px 14px; font-size: clamp(20px, 2.6vw, 30px); font-weight: 800; font-family: var(--font-mono); border: 3px solid var(--line); border-radius: var(--r-md); background: var(--card); cursor: pointer; transition: border-color .12s, color .12s, transform .12s; white-space: nowrap; overflow: hidden; text-align: center; }
 .opt-btn:hover { border-color: var(--brand); color: var(--brand-deep); transform: translateY(-2px); }
 .decode-typein { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .mission-feedback { margin-top: 14px; font-size: 16px; font-weight: 700; min-height: 24px; }

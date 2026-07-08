@@ -158,6 +158,24 @@
   }
 
   // ── 미션 (해독 + 응답) ─────────────────────────────────────────────────────
+  // 보기(옵션) 버튼의 글자가 칸 밖으로 삐져나오지 않게 폰트를 줄여 맞춤.
+  //  (오프라인에서 모노 웹폰트가 폴백돼 더 넓어지거나 저해상도 화면일 때 대비 — 측정 기반이라 어떤 길이·폰트든 안전)
+  function fitOptButtons() {
+    const btns = document.querySelectorAll('#screen-mission .opt-btn');
+    if (!btns.length) return;
+    requestAnimationFrame(() => {
+      btns.forEach(b => {
+        if (!b.clientWidth) return;                 // 화면에 안 보이면(폭 0) 측정 불가 → 건너뜀
+        b.style.fontSize = '';                       // CSS 기본값으로 되돌려 다시 측정
+        let size = parseFloat(getComputedStyle(b).fontSize) || 30;
+        let guard = 60;
+        while (b.scrollWidth > b.clientWidth && size > 13 && guard-- > 0) {
+          size -= 1; b.style.fontSize = size + 'px';
+        }
+      });
+    });
+  }
+
   function buildMission() {
     decodeOk = false; decodeTries = 0; replyTries = 0; hintOn = false;
     replyText = ''; replyComposer = new M.HangulComposer();
@@ -216,6 +234,7 @@
 
     if (curDecode.options) {
       wrap.querySelectorAll('.opt-btn').forEach(b => b.onclick = () => checkDecode(b.dataset.opt));
+      fitOptButtons();
     } else {
       $('decodeCheck').onclick = () => checkDecode($('decodeInput').value);
       $('decodeInput').addEventListener('keydown', e => { if (e.key === 'Enter') checkDecode($('decodeInput').value); });
@@ -370,6 +389,10 @@
     $('storyNext').onclick = storyNext;
     $('storyPrev').onclick = storyPrev;
     renderStory();
+    // 화면 크기 변화·모노 폰트 뒤늦은 로드 후 보기 버튼 글자 다시 맞춤
+    let rz = null;
+    global.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(fitOptButtons, 150); });
+    if (global.document && document.fonts && document.fonts.ready) document.fonts.ready.then(fitOptButtons).catch(() => {});
   }
   function reset() {
     grade = null; data = null; phase = 'intro'; sceneIdx = 0;
@@ -381,7 +404,7 @@
 
   // 직접 네비 점프 대응 onShow 핸들러
   function onShowStory() { if (!data) { $('storyImage').innerHTML = ''; $('storyDots').innerHTML = ''; $('storyText').innerHTML = needGradeHTML(); } else renderStory(); }
-  function onShowMission() { if (!data) { $('missionWrap').innerHTML = needGradeHTML(); } else if (!$('missionWrap').querySelector('.mission-card')) buildMission(); }
+  function onShowMission() { if (!data) { $('missionWrap').innerHTML = needGradeHTML(); } else if (!$('missionWrap').querySelector('.mission-card')) buildMission(); else fitOptButtons(); }
   function onShowFinish() { if (!data) { $('finishWrap').innerHTML = needGradeHTML(); } else buildFinish(); }
 
   global.Story = { init, reset, setSound, getGrade: () => grade, onShowStory, onShowMission, onShowFinish, _answer: () => curDecode && curDecode.answer };
