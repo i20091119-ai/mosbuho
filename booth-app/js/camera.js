@@ -296,6 +296,17 @@
   }
   function undoLast() { if (built.length) { built.pop(); renderBuilt(); } }
   function clearBuilt() { built = []; renderBuilt(); }
+
+  // 전체 초기화(새 관람객) — 만든 메시지·현재 인식·모드까지 비움. 카메라도 끔.
+  //  (기기 설정인 화면 뒤집기 flip 은 유지)
+  function resetAll() {
+    if (running) stop();
+    cmode = 'en';
+    document.querySelectorAll('#screen-camera [data-cmode]')
+      .forEach(x => x.classList.toggle('active', x.dataset.cmode === 'en'));
+    clearBuilt();
+    resetRecognition();
+  }
   function builtText() { return built.map(b => b.text).join(''); }
   function builtMorse() { return built.map(b => b.morse).join(' '); }  // 글자 사이 = 모스 글자 간격
 
@@ -357,5 +368,5 @@
   }
 
   // 테스트 훅(synthetic ImageData 로 인식 로직 검증용)
-  global.Camera = { init, _analyzeImg: analyzeImg, _detectBeads: detectBeads };
+  global.Camera = { init, resetAll, _analyzeImg: analyzeImg, _detectBeads: detectBeads };
 })(window);

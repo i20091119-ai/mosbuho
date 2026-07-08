@@ -26,6 +26,7 @@
     resetAll() {
       this.lastMessage = null; this.grade = null;
       if (global.Story) global.Story.reset();
+      if (global.Camera && global.Camera.resetAll) global.Camera.resetAll();  // '내가 만든 메시지' 등도 비움
       renderBracelet();
       showScreen('grade');
     }
@@ -55,7 +56,10 @@
 
   document.getElementById('nav').addEventListener('click', e => {
     const btn = e.target.closest('.nav-btn');
-    if (btn) showScreen(btn.dataset.screen);
+    if (!btn) return;
+    // ①학년 탭 = '새 관람객 시작' → 저장된 정보(메시지·미션·카메라 등) 전체 초기화
+    if (btn.dataset.screen === 'grade') Booth.resetAll();
+    else showScreen(btn.dataset.screen);
   });
   document.getElementById('navReset').onclick = () => Booth.resetAll();
 
