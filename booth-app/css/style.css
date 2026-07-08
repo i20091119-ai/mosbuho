@@ -222,6 +222,9 @@ body {
 }
 .mode-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
+/* 토글형 버튼(카메라 화면 뒤집기 등)이 켜진 상태 */
+.btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
 .elem-disp {
   min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 12px;
   flex-wrap: wrap; padding: 14px; background: var(--paper); border-radius: var(--r-md); border: 1px dashed var(--line);

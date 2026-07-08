@@ -32,6 +32,11 @@
   let stream = null, raf = null, running = false;
   let video, overlay, octx, proc, pctx;
   let cmode = 'en';
+  // 웹캠을 거꾸로(180°) 설치했을 때 켜는 상하/좌우 반전. 기기별로 localStorage 에 저장.
+  //  ROI 가 화면 중앙 대칭(x 0.08~0.92, y 0.30~0.70)이라 잘라오는 원본 사각형은 그대로 두고
+  //  그 안의 그림만 180° 돌려 그리면 됨 → 인식은 정상 방향, 미리보기도 CSS 로 같이 뒤집어 맞춤.
+  let flip = false;
+  try { flip = localStorage.getItem('cam.flip') === '1'; } catch (e) {}
   let lastResult = '';   // 마지막 표시 결과(안정화용)
   let stableCount = 0, pending = '';
   let confirmedText = '', confirmedMorse = '';
@@ -91,7 +96,15 @@
     const sy = vh * ROI.y0, sh = vh * (ROI.y1 - ROI.y0);
     const w = PROC_W, h = Math.max(1, Math.round(PROC_W * sh / sw));
     proc.width = w; proc.height = h;
-    pctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+    if (flip) {
+      // 180° 회전해서 그리기(상하·좌우 반전) → 거꾸로 단 웹캠도 바로 선 그림으로 분석.
+      pctx.save();
+      pctx.translate(w, h); pctx.rotate(Math.PI);
+      pctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+      pctx.restore();
+    } else {
+      pctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+    }
     return pctx.getImageData(0, 0, w, h);
   }
 
@@ -258,6 +271,20 @@
     renderReadout({ beads: [], morse: '', text: '' });
   }
 
+  // 반전 적용: 미리보기(video)를 CSS 로 180° 돌려 사람 눈에도 바로 서게 하고, 버튼 상태 갱신.
+  //  (분석 회전은 grabROI 에서 처리 — 오버레이는 회전된 미리보기 위에 그려져 자연히 정렬됨)
+  function applyFlip() {
+    if (video) video.style.transform = flip ? 'rotate(180deg)' : '';
+    const b = $('camFlip');
+    if (b) { b.classList.toggle('active', flip); b.textContent = flip ? '↕ 뒤집기 켜짐' : '↕ 화면 뒤집기'; }
+  }
+  function toggleFlip() {
+    flip = !flip;
+    try { localStorage.setItem('cam.flip', flip ? '1' : '0'); } catch (e) {}
+    applyFlip();
+    resetRecognition();   // 방향이 바뀌었으니 현재 인식은 비움
+  }
+
   // ── 한 글자씩 누적해 팔찌 만들기 ───────────────────────────────────────────
   // 흐름: ① 한 글자 비즈를 카메라에 → 인식 → ② '이 글자 추가' → 팔찌에 실물로 꿰기 → 반복
   function addCurrent() {
@@ -308,6 +335,8 @@
     $('camStart').onclick = start;
     $('camStop').onclick = stop;
     $('camReset').onclick = resetRecognition;
+    const flipB = $('camFlip'); if (flipB) flipB.onclick = toggleFlip;
+    applyFlip();   // 저장된 반전 설정을 미리보기·버튼에 반영
     $('camAdd').onclick = addCurrent;
     const undoB = $('camUndo'); if (undoB) undoB.onclick = undoLast;
     const clearB = $('camClear'); if (clearB) clearB.onclick = clearBuilt;
