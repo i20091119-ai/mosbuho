@@ -31,7 +31,9 @@
   // 상태
   let stream = null, raf = null, running = false;
   let video, overlay, octx, proc, pctx;
-  let cmode = 'en';
+  // 카메라 인식은 숫자·알파벳 자동 인식(모드 선택 없음).
+  //  영문/숫자 모스는 코드가 겹치지 않아 한 표(alnum)로 안전하게 자동 판별된다.
+  const CMODE = 'alnum';
   // 웹캠을 거꾸로(180°) 설치했을 때 켜는 상하/좌우 반전. 기기별로 localStorage 에 저장.
   //  ROI 가 화면 중앙 대칭(x 0.08~0.92, y 0.30~0.70)이라 잘라오는 원본 사각형은 그대로 두고
   //  그 안의 그림만 180° 돌려 그리면 됨 → 인식은 정상 방향, 미리보기도 CSS 로 같이 뒤집어 맞춤.
@@ -41,8 +43,8 @@
   let stableCount = 0, pending = '';
   let confirmedText = '', confirmedMorse = '';
   let built = [];        // 한 글자씩 누적: [{ text, morse }]  → 팔찌 만들기
-  const MAXLEN = { en: 4, ko: 4, num: 4 };   // 영/한/숫자 모두 최대 4자
-  function capOf() { return MAXLEN[cmode] || 4; }
+  const MAXLEN = 4;                          // 최대 4자
+  function capOf() { return MAXLEN; }
   function atCap() { return built.length >= capOf(); }
 
   function $(id) { return document.getElementById(id); }
@@ -185,13 +187,8 @@
 
   function decodeMorse(morse) {
     const letters = morse.trim().split(/\s+/).filter(Boolean);
-    if (cmode === 'ko') {
-      const comp = new M.HangulComposer();
-      letters.forEach(l => comp.feed(M.decode(l, 'ko')));
-      comp.flush();
-      return comp.committed;
-    }
-    return letters.map(l => M.decode(l, cmode)).join('');
+    // 숫자·알파벳 자동 판별(alnum) — 겹치지 않는 코드라 한 표로 안전하게 결정됨.
+    return letters.map(l => M.decode(l, CMODE)).join('');
   }
 
   // ── 오버레이(검출 박스) ───────────────────────────────────────────────────
@@ -297,13 +294,10 @@
   function undoLast() { if (built.length) { built.pop(); renderBuilt(); } }
   function clearBuilt() { built = []; renderBuilt(); }
 
-  // 전체 초기화(새 관람객) — 만든 메시지·현재 인식·모드까지 비움. 카메라도 끔.
+  // 전체 초기화(새 관람객) — 만든 메시지·현재 인식 비움. 카메라도 끔.
   //  (기기 설정인 화면 뒤집기 flip 은 유지)
   function resetAll() {
     if (running) stop();
-    cmode = 'en';
-    document.querySelectorAll('#screen-camera [data-cmode]')
-      .forEach(x => x.classList.toggle('active', x.dataset.cmode === 'en'));
     clearBuilt();
     resetRecognition();
   }
@@ -335,7 +329,7 @@
     if (!text) return;
     built = [];                // 다음 손님을 위해 비움(확정 후 화면 전환)
     renderBuilt();
-    global.Booth.confirmMessage(text, cmode, 'camera');
+    global.Booth.confirmMessage(text, CMODE, 'camera');
   }
 
   // ── 초기화 ─────────────────────────────────────────────────────────────
@@ -353,15 +347,7 @@
     const clearB = $('camClear'); if (clearB) clearB.onclick = clearBuilt;
     const finishB = $('camFinish'); if (finishB) finishB.onclick = finishBracelet;
     renderBuilt();
-    // 모드 탭
-    document.querySelectorAll('#screen-camera [data-cmode]').forEach(t => {
-      t.onclick = () => {
-        cmode = t.dataset.cmode;
-        document.querySelectorAll('#screen-camera [data-cmode]').forEach(x => x.classList.toggle('active', x === t));
-        clearBuilt();          // 모드 바뀌면 만들던 메시지도 초기화(혼동 방지)
-        resetRecognition();
-      };
-    });
+    // (모드 선택 없음 — 숫자·알파벳 자동 인식)
 
     // 화면을 벗어나면 카메라를 끄고 배터리/프라이버시 보호
     global.registerScreen && global.registerScreen('camera', { onHide: () => { if (running) stop(); } });
