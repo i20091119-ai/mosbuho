@@ -80,6 +80,18 @@ if [ -z "$CHROME" ]; then
   exit 1
 fi
 
+# 3.5) 전원이 갑자기 꺼진 뒤(콘센트 뽑힘 등) 크롬이 키오스크로 안 뜨는 문제 방지.
+#   - 남은 SingletonLock 이 새 크롬 실행을 막음 → 제거
+#   - "비정상 종료" 플래그가 있으면 '페이지 복원?' 팝업이 떠 키오스크가 가려짐
+#     → Preferences 의 종료 상태를 '정상'으로 되돌려 팝업 자체를 없앰
+PROFILE="$HOME/.config/booth-chromium"
+pkill -f "user-data-dir=$PROFILE" 2>/dev/null || true
+rm -f "$PROFILE"/Singleton* 2>/dev/null || true
+PREF="$PROFILE/Default/Preferences"
+if [ -f "$PREF" ]; then
+  sed -i 's/"exit_type":"[^"]*"/"exit_type":"Normal"/; s/"exited_cleanly":false/"exited_cleanly":true/' "$PREF" 2>/dev/null || true
+fi
+
 # 4) 키오스크 실행
 #   - 전용 프로필: 카메라 권한 등 설정 유지
 #   - use-fake-ui-for-media-stream: 카메라 권한 팝업 없이 자동 허용
