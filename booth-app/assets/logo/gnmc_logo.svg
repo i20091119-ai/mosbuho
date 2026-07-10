@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ============================================================================
+     gnmc_logo.svg — 경남수학문화관(GNMC) 로고 재현본
+     ----------------------------------------------------------------------------
+     ⚠ 원본 로고.png 의 바이너리가 이 작업 환경 파일시스템에 들어오지 않아(채팅에는
+        표시되나 디스크에는 없음) 추출 팔레트로 모티프를 재현했습니다.
+        원본 PNG 를 assets/gnmc_logo.png 로 저장하면 헤더가 자동으로 그것을 사용합니다.
+     모티프: 정다각형(△□⬠⬡○) 무지개 상승 아크 + 흰 속파임, GNMC(무지개 C), 한글 명칭.
+   ============================================================================ -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 150" width="660" height="150" role="img" aria-label="경상남도교육청 경남수학문화관 GNMC">
+  <defs>
+    <linearGradient id="rainbowC" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#C00018"/>
+      <stop offset="0.3" stop-color="#F07818"/>
+      <stop offset="0.55" stop-color="#78A818"/>
+      <stop offset="0.8" stop-color="#1878C0"/>
+      <stop offset="1" stop-color="#784890"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ── 정다각형 상승 아크 (각 도형 안에 흰 속파임) ── -->
+  <g>
+    <!-- △ 빨강 -->
+    <polygon points="40,16 70,74 10,74" fill="#C00018"/>
+    <polygon points="40,38 55,66 25,66" fill="#fff"/>
+    <!-- □ 주황 (살짝 회전) -->
+    <g transform="rotate(-12 98 50)">
+      <rect x="76" y="28" width="44" height="44" rx="5" fill="#F07818"/>
+      <rect x="90" y="42" width="16" height="16" rx="3" fill="#fff"/>
+    </g>
+    <!-- ⬠ 연두 -->
+    <polygon points="152,20 178,40 168,70 136,70 126,40" fill="#78A818"/>
+    <polygon points="152,38 165,48 160,62 144,62 139,48" fill="#fff"/>
+    <!-- ⬡ 파랑 -->
+    <polygon points="204,22 226,35 226,61 204,74 182,61 182,35" fill="#1878C0"/>
+    <polygon points="204,38 214,44 214,56 204,62 194,56 194,44" fill="#fff"/>
+    <!-- ○ 보라 -->
+    <circle cx="252" cy="50" r="26" fill="#784890"/>
+    <circle cx="252" cy="50" r="12" fill="#fff"/>
+  </g>
+
+  <!-- ── GNMC 워드마크 (C 는 무지개) ── -->
+  <text x="66" y="132" font-family="'Pretendard','Noto Sans KR',sans-serif" font-weight="800" font-size="30" letter-spacing="1" fill="#1b1b1b">GNM</text>
+  <text x="129" y="132" font-family="'Pretendard','Noto Sans KR',sans-serif" font-weight="800" font-size="30" fill="url(#rainbowC)">C</text>
+
+  <!-- ── 한글 명칭 (마크 오른쪽) ── -->
+  <text x="298" y="48" font-family="'Pretendard','Noto Sans KR',sans-serif" font-weight="600" font-size="17" letter-spacing="1" fill="#3a3a3a">경상남도교육청</text>
+  <text x="298" y="94" font-family="'Pretendard','Noto Sans KR',sans-serif" font-weight="800" font-size="34" letter-spacing="1" fill="#161616">경남수학문화관</text>
+  <text x="300" y="118" font-family="'Pretendard','Noto Sans KR',sans-serif" font-weight="500" font-size="11.5" letter-spacing="0.3" fill="#6a6a6a">Gyeongnam Mathematics Culture Center</text>
+</svg>

@@ -1,43 +1,51 @@
 /* ============================================================================
- * app.js — 부스앱 셸: 화면 전환 · 홈 · 모듈 조율 · 공통 메시지 버스
+ * app.js — 셸: 화면 전환 · 흐름 제어 · 공통 메시지 버스 · 팔찌 안내 · 리셋
  * ----------------------------------------------------------------------------
- * 화면 순서(인지 사다리): 홈 → ②전신키(추상) → ③카메라(반실물) → ⑤신호확인(실물) → 통계
- * 해설사가 학생을 시차 운영하므로 화면 이동을 빠르고 직관적으로.
+ * 가이드 흐름: ①학년 → ②이야기 → ③미션(해독+답신) → ④카메라 → ⑤팔찌 → ⑥마무리
+ * 시차 운영을 위해 상단 네비로 자유 이동 가능. "처음으로"로 명확히 리셋.
  * ==========================================================================*/
 (function (global) {
   'use strict';
+  const M = global.Morse;
 
-  // ── 공통 메시지 버스 ──────────────────────────────────────────────────────
-  // ②전신키/③카메라에서 확정한 메시지를 ⑤아두이노로 전달하고 통계에 기록.
+  // ── 공통 메시지 버스 ──
   const Booth = {
+    grade: null, mode: 'en', lastMessage: null,
     _listeners: [],
     onMessage(cb) { this._listeners.push(cb); },
-    // text: 해독 문자열, mode: 'en'|'ko'|'num'|'sym', source: 'telegraph'|'camera'
+    // ③미션 답신/④카메라에서 확정한 메시지 → 팔찌 안내(+ 통계 기록)
     confirmMessage(text, mode, source) {
-      text = (text || '').trim();
-      if (!text) return;
-      // 통계 기록 (개인정보 없이 메시지만)
+      text = (text || '').trim(); if (!text) return;
+      const morse = M.textToMorse(text, mode);
+      this.lastMessage = { text, mode, morse, source };
       if (global.Stats) global.Stats.record({ text, mode, source, ts: Date.now() });
-      // 아두이노 화면으로 전달
       this._listeners.forEach(cb => { try { cb(text, mode, source); } catch (e) {} });
-      // 자동 이동
-      showScreen('arduino');
+      renderBracelet();
+      showScreen('bracelet');
+    },
+    resetAll() {
+      this.lastMessage = null; this.grade = null;
+      if (global.Story) global.Story.reset();
+      if (global.Camera && global.Camera.resetAll) global.Camera.resetAll();  // '내가 만든 메시지' 등도 비움
+      renderBracelet();
+      showScreen('grade');
     }
   };
   global.Booth = Booth;
 
-  // ── 화면 전환 ──────────────────────────────────────────────────────────────
-  const screenMods = {}; // screen id → { onShow, onHide }
+  // ── 화면 전환 ──
+  const screenMods = {};
   function registerScreen(id, hooks) { screenMods[id] = hooks; }
   global.registerScreen = registerScreen;
 
-  let current = 'home';
+  let current = 'grade';
   function showScreen(id) {
     if (id === current) return;
     const prev = screenMods[current];
     if (prev && prev.onHide) { try { prev.onHide(); } catch (e) {} }
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('screen-' + id).classList.add('active');
+    const el = document.getElementById('screen-' + id);
+    if (el) el.classList.add('active');
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.screen === id));
     current = id;
     const next = screenMods[id];
@@ -48,62 +56,98 @@
 
   document.getElementById('nav').addEventListener('click', e => {
     const btn = e.target.closest('.nav-btn');
-    if (btn) showScreen(btn.dataset.screen);
+    if (!btn) return;
+    // ①학년 탭 = '새 관람객 시작' → 저장된 정보(메시지·미션·카메라 등) 전체 초기화
+    if (btn.dataset.screen === 'grade') Booth.resetAll();
+    else showScreen(btn.dataset.screen);
   });
+  document.getElementById('navReset').onclick = () => Booth.resetAll();
 
-  // ── 홈 화면 구성 ───────────────────────────────────────────────────────────
-  function buildHome() {
-    // 점·대시 모티프 (로고 색 시퀀스)
+  // ── 브랜드 모티프(학년 화면 상단) ──
+  function buildMotif() {
     const motif = document.getElementById('homeMotif');
-    const pat = ['dot', 'dash', 'dot', 'dash', 'dash', 'dot']; // 임의의 시그니처 패턴
+    if (!motif) return;
+    const pat = ['dot', 'dash', 'dot', 'dash', 'dash', 'dot'];
     motif.innerHTML = pat.map(p => p === 'dot'
       ? '<span class="m-dot" style="width:22px;height:22px"></span>'
       : '<span class="m-dash" style="width:58px;height:22px;border-radius:11px"></span>').join('');
 
-    const cards = [
-      { s: 'telegraph', no: '2', c: 'var(--c-orange)', t: '전신키 두드리기', d: '키를 짧게/길게 눌러 점·대시를 직접 만들어요.', tag: '추상', tagc: 'var(--c-orange)' },
-      { s: 'camera', no: '3', c: 'var(--c-blue)', t: '카메라로 비즈 읽기', d: '트레이에 놓은 빨강·파랑 비즈를 실시간 해석.', tag: '반실물', tagc: 'var(--c-blue)' },
-      { s: 'arduino', no: '5', c: 'var(--c-purple)', t: '아두이노 신호 확인', d: '완성한 메시지를 LED·부저로 출력해요.', tag: '실물', tagc: 'var(--c-purple)' },
-      { s: 'stats', no: '∑', c: 'var(--c-green)', t: '데이터 통계', d: '오늘 모두가 만든 메시지를 한눈에.', tag: '수학', tagc: 'var(--c-green)' }
-    ];
-    document.getElementById('homeCards').innerHTML = cards.map(c => `
-      <button class="home-card" data-screen="${c.s}">
-        <span class="badge" style="background:${c.c}">${c.no}</span>
-        <h3>${c.t}</h3>
-        <p>${c.d}</p>
-        <span class="ladder-tag" style="background:${c.tagc}1a;color:${c.tagc}">${c.tag}</span>
-      </button>`).join('');
-    document.getElementById('homeCards').addEventListener('click', e => {
-      const card = e.target.closest('.home-card');
-      if (card) showScreen(card.dataset.screen);
-    });
+    // 손그림풍 떠다니는 장식 (학년 화면 히어로)
+    const hero = document.querySelector('#screen-grade .home-hero');
+    if (hero && !hero.querySelector('.hero-deco')) {
+      const deco = document.createElement('div');
+      deco.className = 'hero-deco';
+      deco.setAttribute('aria-hidden', 'true');
+      deco.innerHTML = ['star d1', 'sparkle d2', 'rocket d3', 'planet d4', 'sparkle d5', 'star d6']
+        .map(s => { const f = s.split(' ')[0]; return `<img class="doodle ${s.split(' ')[1]}" src="assets/deco/${f}.svg" alt="" onerror="this.remove()">`; })
+        .join('');
+      hero.appendChild(deco);
+    }
   }
 
-  // ── 화면 꺼짐 방지 + 무입력 시 홈 복귀 ──────────────────────────────────────
-  let wakeLock = null;
-  async function keepAwake() {
-    try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+  // 모스 문자열 → 좌→우 비즈 HTML. 점=짧은 비즈, 대시=긴 비즈(길이로 구분, 색은 자유).
+  // 한 글자씩 만들므로 글자/단어 구분은 흰색 비즈가 아니라 '띄움'(빈 간격)으로만 표시.
+  function morseToBeadsHTML(morse) {
+    return (morse || '').split('').map(c => {
+      if (c === '.') return '<span class="bead-big dot" title="점=짧은 비즈"></span>';
+      if (c === '-') return '<span class="bead-big dash" title="대시=긴 비즈"></span>';
+      if (c === ' ') return '<span class="bead-sep" title="글자 사이 띄움"></span>';
+      if (c === '/') return '<span class="bead-sep wide" title="단어 사이 띄움"></span>';
+      return '';
+    }).join('');
   }
+  Booth.morseToBeadsHTML = morseToBeadsHTML;
+
+  // ── ⑥ 팔찌 안내 ──
+  function renderBracelet() {
+    const host = document.getElementById('braceletView');
+    if (!host) return;
+    const msg = Booth.lastMessage;
+    if (!msg) {
+      host.innerHTML = '<p style="color:var(--muted)">아직 확정한 배열이 없어요. ③미션 답신이나 ④카메라에서 메시지를 확정하면 여기에 배열이 나타나요.</p>';
+      return;
+    }
+    const beads = morseToBeadsHTML(msg.morse);
+    host.innerHTML = `
+      <div class="bracelet-msg">내 메시지: <b>${escapeHtml(msg.text)}</b></div>
+      <div class="bracelet-string">${beads}</div>
+      <p style="color:var(--ink-soft);margin-top:12px">왼쪽부터 순서대로 끈에 꿰어요. <b>짧은 비즈=점</b>, <b>긴 비즈=대시</b>. <b>색은 자유! 길이로 구분해요.</b> 글자는 카메라에서 한 글자씩 만들어 모은 거예요 — 화면 순서 그대로 꿰면 돼요!</p>`;
+  }
+  function escapeHtml(s) { return (s || '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+
+  // ── 화면 꺼짐 방지 + 무입력 복귀 ──
+  let wakeLock = null;
+  async function keepAwake() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} }
   let idleTimer = null;
-  const IDLE_MS = 180000; // 3분 무입력 시 홈으로 (상설 운영 대비)
+  const IDLE_MS = 240000; // 4분 무입력 → 처음으로
   function resetIdle() {
     clearTimeout(idleTimer);
-    idleTimer = setTimeout(() => { if (current !== 'home') showScreen('home'); }, IDLE_MS);
+    idleTimer = setTimeout(() => { if (current !== 'grade') Booth.resetAll(); }, IDLE_MS);
   }
-  ['pointerdown', 'keydown', 'touchstart'].forEach(ev =>
-    document.addEventListener(ev, resetIdle, { passive: true }));
+  ['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, resetIdle, { passive: true }));
 
-  // ── 부팅 ───────────────────────────────────────────────────────────────────
+  // ── 부팅 ──
   function boot() {
-    buildHome();
-    if (global.Stats) global.Stats.init();
-    if (global.Telegraph) global.Telegraph.init();
+    buildMotif();
+    if (global.Story) global.Story.init();
     if (global.Camera) global.Camera.init();
-    if (global.Arduino) global.Arduino.init();
+    if (global.Arduino) global.Arduino.init();   // 물리 버튼(전신기) → 미션 답신 브리지만 담당
+
+    // 흐름 이동 버튼: 팔찌 → 마무리 (⑥신호확인 삭제됨)
+    const bn = document.getElementById('braceletNext');
+    if (bn) bn.onclick = () => showScreen('finish');
+
+    // 직접 네비 점프 대비 onShow 핸들러
+    if (global.Story) {
+      registerScreen('story', { onShow: global.Story.onShowStory });
+      registerScreen('mission', { onShow: global.Story.onShowMission });
+      registerScreen('finish', { onShow: global.Story.onShowFinish });
+    }
+    registerScreen('grade', { onShow: buildMotif });
+
+    renderBracelet();
     keepAwake();
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') keepAwake();
-    });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') keepAwake(); });
     resetIdle();
   }
 

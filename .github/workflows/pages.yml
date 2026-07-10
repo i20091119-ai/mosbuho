@@ -1,0 +1,40 @@
+# GitHub Pages 배포 — booth-app/ 를 테스트 URL로 발행
+# (부스 본운영은 UNO Q 로컬 오프라인. 이건 PC/폰에서 미리보기·검증용)
+#
+# 사용: 저장소 Settings → Pages → Build and deployment → Source = "GitHub Actions" 로 1회 설정.
+# 이후 아래 브랜치에 push 하면 자동 배포되고, Actions 로그에 배포 URL이 표시됩니다.
+name: Deploy booth-app to Pages
+
+on:
+  push:
+    branches:
+      - main
+      - claude/focused-tesla-cpbbqo
+    paths:
+      - 'booth-app/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: booth-app          # 이 폴더가 사이트 루트가 됨
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,56 +1,67 @@
 /* ============================================================================
- * camera.js — ③ 웹캠 비즈 색 인식 + 조명 보정 (반실물 단계, 앱 핵심 기능)
+ * camera.js — ⑤ 웹캠 비즈 인식 (반실물 단계, 앱 핵심 기능)
  * ----------------------------------------------------------------------------
- * 방식: 색(HSV Hue) 기반 분류. 길이가 아니라 색으로 점/대시 구분.
- *   채도(S)로 배경 제거 → 색상(H)으로 빨강/파랑 판정 → 좌→우 순서로 읽어 모스 생성.
- *   빨강 비즈 = 점(·), 파랑 비즈 = 대시(—).
+ * 방식: **모양(가로÷세로 비율) 기반 · 한 번에 한 글자**. 보정이 필요 없다.
+ *   - 한 화면 = 알파벳/숫자 한 글자. 글자 구분(흰색·띄움)은 쓰지 않는다.
+ *   - 짧은(둥근) 비즈 = 가로≈세로(비율~1) → 점(·)
+ *     긴(원통) 비즈   = 가로≈세로×3(비율~3) → 대시(—)
+ *   - 비율로 판정하므로 카메라 거리·비즈 크기와 무관(스케일 불변). 보정 불필요.
+ *   - 배경 분리는 **밝기(명도) + 매 프레임 Otsu 자동 임계값**. 채도(색)를 안 쓰므로
+ *     흰/옅은 비즈도 잡히고, 어두운 트레이와 잘 분리된다(보정 불필요).
+ *   - 비즈 사이 틈(어두운 배경)으로 비즈를 분리 → 같은 색이 붙어도 구분됨
+ *   - 색은 자유(같은 색 인접 가능). 트레이는 비즈보다 어두워야 분리가 잘 된다.
+ *   - 흰색 비즈는 더 이상 구분자가 아님(밝은 점으로 보임).
  * 외부 라이브러리 없이 순수 JS: getUserMedia → <canvas> 픽셀 분석 →
- *   열(column) 단위 색 라벨 → 좌→우 연결요소(run) 검출 → 글자/단어 그룹핑 → 디코딩.
- * 조명 보정: 현재 조명에서 빨강·파랑 샘플을 한 번 찍어 기준 Hue 범위 재설정(30초).
+ *   밝기 Otsu 로 비즈/배경 분리 → 틈으로 비즈 분리 → 각 비즈 가로÷세로 비율로 점/대시 → 디코딩(한 글자).
  * ==========================================================================*/
 (function (global) {
   'use strict';
   const M = global.Morse;
 
-  // ── 분석 파라미터 (조명 보정으로 갱신) ──────────────────────────────────
+  // ── 분석 파라미터 ──────────────────────────────────────────────────────────
   const PROC_W = 200;            // 처리 해상도 폭(px) — 속도/정확도 균형
-  const SAT_MIN = 0.30;          // 채도 하한(배경 제거). 보정으로 조정 가능
-  const VAL_MIN = 0.18;          // 명도 하한(그림자 제거)
-  const COL_RATIO = 0.12;        // 한 열이 '색'으로 인정되는 최소 픽셀 비율
-  const MIN_RUN = 3;             // 노이즈 제거: 최소 run 폭(px)
-  const LETTER_GAP_FACTOR = 1.6; // 평균 비즈폭 × 이 값 이상 간격이면 글자 경계
+  const VAL_FLOOR = 0.30;        // 명도 절대 하한(아무리 어두워도 이보다 밝아야 비즈)
+  const SEP_MIN = 40;            // 비즈/배경 밝기차(0~255) 최소 — 이보다 작으면 비즈 없음으로
+  const BRIGHT_MIN = 120;        // 비즈(밝은 쪽) 평균 명도 최소 — 어두운 프레임 오검출 방지
+  const COL_RATIO = 0.12;        // 한 열이 '비즈'로 인정되는 최소 픽셀 비율
+  const MIN_RUN = 3;             // 노이즈 제거: 최소 비즈 폭(px)
+  const ASPECT_THR = 1.9;        // 가로÷세로 ≥ 이 값이면 대시(원통), 미만이면 점(둥근)
   const ROI = { x0: 0.08, x1: 0.92, y0: 0.30, y1: 0.70 }; // 인식 영역(화면 비율)
-
-  // 기준 Hue 범위 (기본값 — 밝기 ±30% 변동에도 색상 기준은 안정적)
-  let calib = {
-    red:  { test: h => (h < 20 || h > 340) },
-    blue: { test: h => (h >= 195 && h <= 265) },
-    satMin: SAT_MIN
-  };
 
   // 상태
   let stream = null, raf = null, running = false;
   let video, overlay, octx, proc, pctx;
-  let cmode = 'en';
+  // 카메라 인식은 숫자·알파벳 자동 인식(모드 선택 없음).
+  //  영문/숫자 모스는 코드가 겹치지 않아 한 표(alnum)로 안전하게 자동 판별된다.
+  const CMODE = 'alnum';
+  // 웹캠을 거꾸로(180°) 설치했을 때 켜는 상하/좌우 반전. 기기별로 localStorage 에 저장.
+  //  ROI 가 화면 중앙 대칭(x 0.08~0.92, y 0.30~0.70)이라 잘라오는 원본 사각형은 그대로 두고
+  //  그 안의 그림만 180° 돌려 그리면 됨 → 인식은 정상 방향, 미리보기도 CSS 로 같이 뒤집어 맞춤.
+  let flip = false;
+  try { flip = localStorage.getItem('cam.flip') === '1'; } catch (e) {}
   let lastResult = '';   // 마지막 표시 결과(안정화용)
   let stableCount = 0, pending = '';
   let confirmedText = '', confirmedMorse = '';
+  let built = [];        // 한 글자씩 누적: [{ text, morse }]  → 팔찌 만들기
+  const MAXLEN = 4;                          // 최대 4자
+  function capOf() { return MAXLEN; }
+  function atCap() { return built.length >= capOf(); }
 
   function $(id) { return document.getElementById(id); }
 
-  // ── RGB → HSV ──────────────────────────────────────────────────────────
-  function rgb2hsv(r, g, b) {
-    r /= 255; g /= 255; b /= 255;
-    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
-    let h = 0;
-    if (d !== 0) {
-      if (mx === r) h = ((g - b) / d) % 6;
-      else if (mx === g) h = (b - r) / d + 2;
-      else h = (r - g) / d + 4;
-      h *= 60; if (h < 0) h += 360;
+  // ── Otsu: 밝기 히스토그램에서 비즈/배경을 가르는 임계값 자동 산출 ──────────────
+  function otsu(hist, total) {
+    let sum = 0; for (let i = 0; i < 256; i++) sum += i * hist[i];
+    let sumB = 0, wB = 0, maxVar = -1, thr = 128;
+    for (let t = 0; t < 256; t++) {
+      wB += hist[t]; if (wB === 0) continue;
+      const wF = total - wB; if (wF === 0) break;
+      sumB += t * hist[t];
+      const mB = sumB / wB, mF = (sum - sumB) / wF;
+      const between = wB * wF * (mB - mF) * (mB - mF);
+      if (between > maxVar) { maxVar = between; thr = t; }
     }
-    const s = mx === 0 ? 0 : d / mx;
-    return [h, s, mx];
+    return thr;
   }
 
   // ── 카메라 시작/정지 ─────────────────────────────────────────────────────
@@ -63,10 +74,10 @@
       await video.play();
       running = true;
       $('camMsg').style.display = 'none';
-      ['camStop', 'camCalibRed', 'camCalibBlue', 'camReset', 'camConfirm'].forEach(id => $(id).disabled = false);
+      ['camStop', 'camReset'].forEach(id => { const e = $(id); if (e) e.disabled = false; });
       loop();
     } catch (e) {
-      $('camMsg').innerHTML = '<div style="font-size:40px">🚫</div><div>카메라를 열 수 없습니다.<br>권한을 허용했는지, UNO Q에 웹캠이 연결됐는지 확인하세요.</div>';
+      $('camMsg').innerHTML = '<img class="ic-lg" src="assets/icons/camera-off.svg" alt="" onerror="this.style.display=\'none\'"><div>카메라를 열 수 없습니다.<br>권한을 허용했는지, UNO Q에 웹캠이 연결됐는지 확인하세요.</div>';
     }
   }
   function stop() {
@@ -74,9 +85,9 @@
     if (raf) cancelAnimationFrame(raf);
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
     $('camMsg').style.display = 'flex';
-    $('camMsg').innerHTML = '<div style="font-size:40px">📷</div><div>카메라가 꺼졌습니다</div><button class="btn primary" id="camStart">카메라 켜기</button>';
+    $('camMsg').innerHTML = '<img class="ic-lg" src="assets/icons/camera.svg" alt="" onerror="this.style.display=\'none\'"><div>카메라가 꺼졌습니다</div><button class="btn primary" id="camStart">카메라 켜기</button>';
     $('camStart').onclick = start;
-    ['camStop', 'camCalibRed', 'camCalibBlue', 'camReset', 'camConfirm'].forEach(id => $(id).disabled = true);
+    ['camStop', 'camReset', 'camAdd'].forEach(id => { const e = $(id); if (e) e.disabled = true; });
   }
 
   // ── ROI 픽셀을 처리 캔버스로 가져오기 ──────────────────────────────────────
@@ -87,77 +98,97 @@
     const sy = vh * ROI.y0, sh = vh * (ROI.y1 - ROI.y0);
     const w = PROC_W, h = Math.max(1, Math.round(PROC_W * sh / sw));
     proc.width = w; proc.height = h;
-    pctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+    if (flip) {
+      // 180° 회전해서 그리기(상하·좌우 반전) → 거꾸로 단 웹캠도 바로 선 그림으로 분석.
+      pctx.save();
+      pctx.translate(w, h); pctx.rotate(Math.PI);
+      pctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+      pctx.restore();
+    } else {
+      pctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+    }
     return pctx.getImageData(0, 0, w, h);
   }
 
-  // ── 열(column) 단위 색 라벨 → run 검출 → 글자 그룹 → 디코딩 ────────────────
+  // ── 비즈 검출: 밝기(명도)로 배경 분리 → 틈으로 분리 + 각 비즈의 가로/세로 측정 ──
+  //   반환: [{x0, x1, width, height}]  (좌→우 순서)
+  //   색(채도) 대신 밝기를 쓰는 이유: 흰/옅은 비즈도 밝아서 잡히고, 어두운 트레이와 잘 분리됨.
+  //   임계값은 매 프레임 Otsu 로 자동 결정 → 조명·배경이 달라도 보정 없이 동작.
+  function detectBeads(img) {
+    const { data, width: w, height: h } = img;
+    const N = w * h;
+    // 1) 픽셀별 명도 V(=RGB 최댓값) + 히스토그램
+    const V = new Uint8Array(N);
+    const hist = new Array(256).fill(0);
+    for (let p = 0; p < N; p++) {
+      const i = p * 4;
+      const v = data[i] > data[i + 1] ? (data[i] > data[i + 2] ? data[i] : data[i + 2])
+                                      : (data[i + 1] > data[i + 2] ? data[i + 1] : data[i + 2]);
+      V[p] = v; hist[v]++;
+    }
+    // 2) Otsu 임계값 + 비즈/배경 평균 명도
+    const thr = otsu(hist, N);
+    let bc = 0, bs = 0, dc = 0, ds = 0;
+    for (let t = 0; t < 256; t++) { if (t > thr) { bc += hist[t]; bs += t * hist[t]; } else { dc += hist[t]; ds += t * hist[t]; } }
+    const brightMean = bc ? bs / bc : 0, darkMean = dc ? ds / dc : 0;
+    // 비즈가 배경보다 충분히 밝지 않으면(=비즈 없음/대비 부족) 검출 안 함 → 오검출 방지
+    if (brightMean - darkMean < SEP_MIN || brightMean < BRIGHT_MIN) return [];
+    const T = Math.max(thr, Math.round(VAL_FLOOR * 255));  // 절대 하한도 함께 적용
+    // 3) 열별 비즈 픽셀 수 → 라벨
+    const need = Math.max(2, Math.round(h * COL_RATIO));
+    const labels = new Array(w).fill(0);   // 0 배경, 1 비즈
+    const colCount = new Array(w).fill(0); // 각 열의 비즈 픽셀 수 ≈ 그 열에서 비즈 세로 두께
+    for (let x = 0; x < w; x++) {
+      let beadN = 0;
+      for (let y = 0; y < h; y++) { if (V[y * w + x] > T) beadN++; }
+      colCount[x] = beadN;
+      if (beadN >= need) labels[x] = 1;
+    }
+    // 틈(배경)으로 비즈 분리 — 색이 같아도 틈만 있으면 구분됨.
+    const GAP = Math.max(2, Math.round(w * 0.012));
+    const beads = []; let cur = null, gap = 0;
+    const close = () => { if (cur) { beads.push(cur); cur = null; } };
+    for (let x = 0; x < w; x++) {
+      if (labels[x] === 0) { gap++; if (cur && gap > GAP) close(); continue; }
+      if (cur) cur.x1 = x;
+      else { close(); cur = { x0: x, x1: x }; }
+      gap = 0;
+    }
+    close();
+    // 각 비즈의 가로(폭) + 세로(두께≈지름) 측정. 세로는 열별 두께의 상위 80% 값(가장자리 노이즈 방지).
+    beads.forEach(b => {
+      b.width = b.x1 - b.x0 + 1;
+      const cnts = [];
+      for (let x = b.x0; x <= b.x1; x++) cnts.push(colCount[x]);
+      cnts.sort((a, c) => a - c);
+      b.height = cnts[Math.min(cnts.length - 1, Math.floor(cnts.length * 0.8))] || 1;
+    });
+    return beads.filter(b => b.width >= MIN_RUN);
+  }
+
+  // 비즈 → 모스 → 글자  (한 번에 한 글자: 가로÷세로 비율로 점/대시, 글자 구분 없음)
+  function analyzeImg(img) {
+    const beads = detectBeads(img);
+    if (!beads.length) return { beads: [], morse: '', text: '' };
+    let morse = '';
+    beads.forEach(b => {
+      b.aspect = b.width / Math.max(1, b.height);
+      b.dot = b.aspect < ASPECT_THR;       // 둥근(비율<1.9)=점, 길쭉(비율≥1.9)=대시
+      morse += b.dot ? '.' : '-';
+    });
+    return { beads, morse, text: decodeMorse(morse) };
+  }
+
   function analyze() {
     const img = grabROI();
     if (!img) return null;
-    const { data, width: w, height: h } = img;
-    const need = Math.max(2, Math.round(h * COL_RATIO));
-
-    // 1) 열별 라벨 (R / B / none)
-    const labels = new Array(w).fill(0); // 0 none, 1 red, 2 blue
-    for (let x = 0; x < w; x++) {
-      let rc = 0, bc = 0;
-      for (let y = 0; y < h; y++) {
-        const i = (y * w + x) * 4;
-        const [hue, s, v] = rgb2hsv(data[i], data[i + 1], data[i + 2]);
-        if (s < calib.satMin || v < VAL_MIN) continue;
-        if (calib.red.test(hue)) rc++;
-        else if (calib.blue.test(hue)) bc++;
-      }
-      if (rc >= need && rc >= bc) labels[x] = 1;
-      else if (bc >= need && bc > rc) labels[x] = 2;
-    }
-
-    // 2) run(연결요소) 검출 — 색 바뀌거나 큰 공백이면 분리
-    const GAP = Math.max(2, Math.round(w * 0.012));
-    const runs = []; let cur = null, gap = 0;
-    for (let x = 0; x < w; x++) {
-      const L = labels[x];
-      if (L === 0) {
-        gap++;
-        if (cur && gap > GAP) { runs.push(cur); cur = null; }
-      } else {
-        if (!cur) cur = { color: L, x0: x, x1: x };
-        else if (cur.color === L) { cur.x1 = x; }
-        else { runs.push(cur); cur = { color: L, x0: x, x1: x }; }
-        gap = 0;
-      }
-    }
-    if (cur) runs.push(cur);
-    const beads = runs.filter(r => (r.x1 - r.x0 + 1) >= MIN_RUN);
-    if (!beads.length) return { beads: [], morse: '', text: '' };
-
-    // 3) 글자 그룹핑: 평균 비즈폭 대비 큰 간격이면 글자 경계
-    const widths = beads.map(b => b.x1 - b.x0 + 1);
-    const avgW = widths.reduce((a, c) => a + c, 0) / widths.length;
-    let morse = '';
-    for (let i = 0; i < beads.length; i++) {
-      morse += beads[i].color === 1 ? '.' : '-';
-      if (i < beads.length - 1) {
-        const gapPx = beads[i + 1].x0 - beads[i].x1;
-        if (gapPx > avgW * LETTER_GAP_FACTOR) morse += ' ';
-      }
-    }
-
-    // 4) 디코딩 (모드별, 한글은 자모→음절 조합)
-    const text = decodeMorse(morse);
-    return { beads, morse, text };
+    return analyzeImg(img);
   }
 
   function decodeMorse(morse) {
     const letters = morse.trim().split(/\s+/).filter(Boolean);
-    if (cmode === 'ko') {
-      const comp = new M.HangulComposer();
-      letters.forEach(l => comp.feed(M.decode(l, 'ko')));
-      comp.flush();
-      return comp.committed;
-    }
-    return letters.map(l => M.decode(l, cmode)).join('');
+    // 숫자·알파벳 자동 판별(alnum) — 겹치지 않는 코드라 한 표로 안전하게 결정됨.
+    return letters.map(l => M.decode(l, CMODE)).join('');
   }
 
   // ── 오버레이(검출 박스) ───────────────────────────────────────────────────
@@ -171,7 +202,7 @@
     beads.forEach(b => {
       const x = rx0 + (b.x0 / w) * rw;
       const bw = ((b.x1 - b.x0 + 1) / w) * rw;
-      octx.strokeStyle = b.color === 1 ? '#C00018' : '#1878C0';
+      octx.strokeStyle = b.dot ? '#E8943D' : '#3D8FE8';
       octx.lineWidth = 3;
       octx.strokeRect(x, ry, bw, rh);
     });
@@ -200,66 +231,105 @@
     }
   }
 
+  function beadLabel(b) {
+    return b.dot ? '<span class="bead dot">짧은·점</span>' : '<span class="bead dash">긴·대시</span>';
+  }
+
   function renderReadout(res) {
     const beadsEl = $('camBeads');
     if (!res.beads.length) { beadsEl.innerHTML = '<span style="color:var(--muted);font-size:13px">아직 없음</span>'; }
-    else {
-      beadsEl.innerHTML = res.beads.map(b => b.color === 1
-        ? '<span class="bead red">점·</span>' : '<span class="bead blue">대시—</span>').join('');
-    }
+    else { beadsEl.innerHTML = res.beads.map(beadLabel).join(''); }
     $('camMorse').textContent = M.morseToGlyphs(res.morse.replace(/ /g, '  '));
     $('camText').textContent = res.text || '';
-    $('camConfirm').disabled = !res.text;
+    const add = $('camAdd'); if (add) add.disabled = !res.text || atCap();
+    renderAlgo(res);
   }
 
-  // ── 조명 보정 ──────────────────────────────────────────────────────────
-  // ROI 중앙에서 채도 높은 픽셀들의 평균 Hue 를 구해 기준 범위를 재설정.
-  function calibrate(which) {
-    const img = grabROI();
-    if (!img) return;
-    const { data, width: w, height: h } = img;
-    let sum = 0, n = 0, sMin = 1;
-    // 중앙 60% 영역만 샘플
-    for (let y = Math.floor(h * 0.2); y < h * 0.8; y++) {
-      for (let x = Math.floor(w * 0.2); x < w * 0.8; x++) {
-        const i = (y * w + x) * 4;
-        const [hue, s, v] = rgb2hsv(data[i], data[i + 1], data[i + 2]);
-        if (s < 0.25 || v < VAL_MIN) continue;
-        // 빨강은 0/360 경계라 sin/cos 평균 처리
-        sum += hue; n++; if (s < sMin) sMin = s;
-      }
-    }
-    if (n < 20) { setCalibMsg('샘플이 부족해요. 비즈를 화면 가운데 크게 보이게 두고 다시 보정하세요.'); return; }
-    const center = circularMeanHue(img, which);
-    const tol = 35;
-    if (which === 'red') {
-      calib.red = { test: h => angDist(h, center) <= tol };
-    } else {
-      calib.blue = { test: h => angDist(h, center) <= tol };
-    }
-    calib.satMin = Math.max(0.2, Math.min(SAT_MIN, sMin * 0.7));
-    setCalibMsg(`${which === 'red' ? '🔴 빨강' : '🔵 파랑'} 보정 완료 — 기준 색상 ${Math.round(center)}° (허용 ±${tol}°).`);
+  // 인식 과정을 한 단계씩 가시화 (복호화가 절차=알고리즘임을 체득)
+  function renderAlgo(res) {
+    const el = $('camAlgo'); if (!el) return;
+    if (!res.beads.length) { el.innerHTML = '<span style="color:var(--muted);font-size:13px">비즈를 인식하면 한 단계씩 보여줘요</span>'; return; }
+    let h = '';
+    res.beads.forEach((b, i) => {
+      const name = b.dot ? '짧은 비즈' : '긴 비즈';
+      const sym = b.dot ? '점(·)' : '대시(—)';
+      const col = b.dot ? 'var(--dot)' : 'var(--dash)';
+      h += `<div class="algo-step">
+        <span class="algo-n">${i + 1}</span>
+        <span>${i + 1}번째: <b style="color:${col}">${name}</b> → <b>${sym}</b></span></div>`;
+    });
+    h += `<div class="algo-step done"><span class="algo-n">✓</span>
+      <span>좌→우로 모두 읽음 → 모스 <b class="mono">${M.morseToGlyphs(res.morse)}</b> → 글자 <b>${res.text || '?'}</b></span></div>`;
+    el.innerHTML = h;
   }
-  // 원형(0–360) 평균 — 빨강 경계 안전
-  function circularMeanHue(img, which) {
-    const { data, width: w, height: h } = img;
-    let sx = 0, sy = 0, n = 0;
-    for (let y = Math.floor(h * 0.2); y < h * 0.8; y++) {
-      for (let x = Math.floor(w * 0.2); x < w * 0.8; x++) {
-        const i = (y * w + x) * 4;
-        const [hue, s, v] = rgb2hsv(data[i], data[i + 1], data[i + 2]);
-        if (s < 0.25 || v < VAL_MIN) continue;
-        const rad = hue * Math.PI / 180; sx += Math.cos(rad); sy += Math.sin(rad); n++;
-      }
-    }
-    let a = Math.atan2(sy / n, sx / n) * 180 / Math.PI; if (a < 0) a += 360; return a;
-  }
-  function angDist(a, b) { let d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; }
-  function setCalibMsg(msg) { $('camCalibState').textContent = msg; }
 
   function resetRecognition() {
     lastResult = ''; pending = ''; stableCount = 0; confirmedText = ''; confirmedMorse = '';
     renderReadout({ beads: [], morse: '', text: '' });
+  }
+
+  // 반전 적용: 미리보기(video)를 CSS 로 180° 돌려 사람 눈에도 바로 서게 하고, 버튼 상태 갱신.
+  //  (분석 회전은 grabROI 에서 처리 — 오버레이는 회전된 미리보기 위에 그려져 자연히 정렬됨)
+  function applyFlip() {
+    if (video) video.style.transform = flip ? 'rotate(180deg)' : '';
+    const b = $('camFlip');
+    if (b) { b.classList.toggle('active', flip); b.textContent = flip ? '↕ 뒤집기 켜짐' : '↕ 화면 뒤집기'; }
+  }
+  function toggleFlip() {
+    flip = !flip;
+    try { localStorage.setItem('cam.flip', flip ? '1' : '0'); } catch (e) {}
+    applyFlip();
+    resetRecognition();   // 방향이 바뀌었으니 현재 인식은 비움
+  }
+
+  // ── 한 글자씩 누적해 팔찌 만들기 ───────────────────────────────────────────
+  // 흐름: ① 한 글자 비즈를 카메라에 → 인식 → ② '이 글자 추가' → 팔찌에 실물로 꿰기 → 반복
+  function addCurrent() {
+    if (!confirmedText) return;
+    if (atCap()) return;       // 최대 4자 초과 방지
+    built.push({ text: confirmedText, morse: confirmedMorse });
+    renderBuilt();
+    resetRecognition();        // 다음 글자를 놓을 수 있게 현재 인식 비움
+  }
+  function undoLast() { if (built.length) { built.pop(); renderBuilt(); } }
+  function clearBuilt() { built = []; renderBuilt(); }
+
+  // 전체 초기화(새 관람객) — 만든 메시지·현재 인식 비움. 카메라도 끔.
+  //  (기기 설정인 화면 뒤집기 flip 은 유지)
+  function resetAll() {
+    if (running) stop();
+    clearBuilt();
+    resetRecognition();
+  }
+  function builtText() { return built.map(b => b.text).join(''); }
+  function builtMorse() { return built.map(b => b.morse).join(' '); }  // 글자 사이 = 모스 글자 간격
+
+  function renderBuilt() {
+    const textEl = $('camBuiltText'), beadsEl = $('camBuiltBeads');
+    const has = built.length > 0;
+    if (textEl) {
+      textEl.innerHTML = has
+        ? `<b>${escapeHtml(builtText())}</b> <span class="mono" style="color:var(--muted)">(${M.morseToGlyphs(builtMorse().replace(/ /g, '  '))})</span>`
+        : '<span style="color:var(--muted);font-size:13px">아직 없음 — 첫 글자를 인식하고 ‘이 글자 추가’를 누르세요</span>';
+    }
+    if (beadsEl) {
+      beadsEl.innerHTML = (has && global.Booth && global.Booth.morseToBeadsHTML)
+        ? global.Booth.morseToBeadsHTML(builtMorse()) : '';
+    }
+    const u = $('camUndo'), c = $('camClear'), f = $('camFinish');
+    if (u) u.disabled = !has; if (c) c.disabled = !has; if (f) f.disabled = !has;
+    const cnt = $('camBuiltCount');
+    if (cnt) cnt.textContent = `(${built.length}/${capOf()}자${atCap() ? ' · 다 채웠어요!' : ''})`;
+    const add = $('camAdd'); if (add && atCap()) add.disabled = true;   // 가득 차면 추가 잠금
+  }
+  function escapeHtml(s) { return (s || '').replace(/[&<>]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch])); }
+
+  function finishBracelet() {
+    const text = builtText();
+    if (!text) return;
+    built = [];                // 다음 손님을 위해 비움(확정 후 화면 전환)
+    renderBuilt();
+    global.Booth.confirmMessage(text, CMODE, 'camera');
   }
 
   // ── 초기화 ─────────────────────────────────────────────────────────────
@@ -269,25 +339,20 @@
 
     $('camStart').onclick = start;
     $('camStop').onclick = stop;
-    $('camCalibRed').onclick = () => calibrate('red');
-    $('camCalibBlue').onclick = () => calibrate('blue');
     $('camReset').onclick = resetRecognition;
-    $('camConfirm').onclick = () => {
-      if (!confirmedText) return;
-      global.Booth.confirmMessage(confirmedText, cmode, 'camera');
-    };
-    // 모드 탭
-    document.querySelectorAll('#screen-camera [data-cmode]').forEach(t => {
-      t.onclick = () => {
-        cmode = t.dataset.cmode;
-        document.querySelectorAll('#screen-camera [data-cmode]').forEach(x => x.classList.toggle('active', x === t));
-        resetRecognition();
-      };
-    });
+    const flipB = $('camFlip'); if (flipB) flipB.onclick = toggleFlip;
+    applyFlip();   // 저장된 반전 설정을 미리보기·버튼에 반영
+    $('camAdd').onclick = addCurrent;
+    const undoB = $('camUndo'); if (undoB) undoB.onclick = undoLast;
+    const clearB = $('camClear'); if (clearB) clearB.onclick = clearBuilt;
+    const finishB = $('camFinish'); if (finishB) finishB.onclick = finishBracelet;
+    renderBuilt();
+    // (모드 선택 없음 — 숫자·알파벳 자동 인식)
 
     // 화면을 벗어나면 카메라를 끄고 배터리/프라이버시 보호
     global.registerScreen && global.registerScreen('camera', { onHide: () => { if (running) stop(); } });
   }
 
-  global.Camera = { init };
+  // 테스트 훅(synthetic ImageData 로 인식 로직 검증용)
+  global.Camera = { init, resetAll, _analyzeImg: analyzeImg, _detectBeads: detectBeads };
 })(window);

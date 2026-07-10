@@ -1,0 +1,2 @@
+# 표준 라이브러리만 사용: json, queue, threading, http.server
+# Bridge(arduino) 는 App Lab 런타임이 제공하므로 pip 설치가 필요 없습니다.
